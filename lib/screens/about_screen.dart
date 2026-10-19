@@ -27,9 +27,9 @@ class AboutScreen extends StatelessWidget {
               ),
             ),
             IconButton(
-              tooltip: 'Download Resume',
-              icon: const Icon(Icons.download_rounded, color: kAccentViolet),
-              onPressed: () => ResumeDownloadService.downloadResume(context),
+              tooltip: 'View Resume',
+              icon: const Icon(Icons.description_rounded, color: kAccentViolet),
+              onPressed: () => ResumeDownloadService.openResumePreview(context),
             ),
           ],
         ),
@@ -213,12 +213,12 @@ class AboutScreen extends StatelessWidget {
         SizedBox(
           width: double.infinity,
           child: FilledButton.icon(
-            onPressed: () => ResumeDownloadService.downloadResume(context),
-            icon: const Icon(Icons.download_rounded),
+            onPressed: () => ResumeDownloadService.openResumePreview(context),
+            icon: const Icon(Icons.description_rounded),
             label: const FittedBox(
               fit: BoxFit.scaleDown,
               child: Text(
-                'Download Resume',
+                'View Resume',
                 style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
               ),
             ),

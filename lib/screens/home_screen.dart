@@ -227,12 +227,12 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
 
-                  // Download Resume Button (Bundled assets/document)
+                  // View Resume Button (Bundled assets/document preview)
                   OutlinedButton.icon(
                     onPressed: () =>
-                        ResumeDownloadService.downloadResume(context),
-                    icon: const Icon(Icons.download_rounded, size: 18),
-                    label: const Text('Download Resume'),
+                        ResumeDownloadService.openResumePreview(context),
+                    icon: const Icon(Icons.description_rounded, size: 18),
+                    label: const Text('View Resume'),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 20, vertical: 14),

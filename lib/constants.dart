@@ -30,6 +30,7 @@ const String kAvatarUrl = 'https://avatars.githubusercontent.com/u/188983849?v=4
 const String kProfileAssetPath = 'assets/images/profile.jpg';
 const String kResumeAssetPath = 'assets/document/SnjR_removed.pdf';
 const String kResumeFileName = 'Sanjay_Bairwa_Resume.pdf';
+const String kResumeImagePage1 = 'assets/document/resume_page_1.png';
 
 // ─── Color Palette (Reference Match) ──────────────────────────────────────────
 // Dark Theme Colors

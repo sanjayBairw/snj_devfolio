@@ -2,12 +2,36 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:syncfusion_flutter_pdf/pdf.dart';
+import '../constants.dart';
 import '../models/resume_data.dart';
 
 /// Intelligent Resume Parser Service.
-/// Picks PDF or text resume files, extracts raw text, and structures key professional details.
+/// Extracts details from bundled resume or selected documents.
 class ResumeParserService {
+  /// Loads and parses the bundled resume directly from assets/document/SnjR_removed.pdf
+  static Future<ResumeData> loadBundledResume() async {
+    try {
+      final byteData = await rootBundle.load(kResumeAssetPath);
+      final fileBytes = byteData.buffer.asUint8List();
+      final PdfDocument document = PdfDocument(inputBytes: fileBytes);
+      final rawText = PdfTextExtractor(document).extractText();
+      document.dispose();
+
+      if (rawText.trim().isNotEmpty) {
+        return parseText(
+          rawText,
+          fileName: kResumeFileName,
+          fileSizeBytes: fileBytes.length,
+        );
+      }
+    } catch (e) {
+      debugPrint('Error loading bundled resume: $e');
+    }
+    return getDemoResume();
+  }
+
   /// Open file picker, extract text from selected PDF/TXT/MD, and parse details.
   static Future<ResumeData?> pickAndParseResume() async {
     try {

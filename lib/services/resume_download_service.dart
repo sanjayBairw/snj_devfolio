@@ -3,9 +3,20 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../constants.dart';
+import '../screens/resume_details_screen.dart';
 
-/// Service to download and export the bundled resume from assets/document/SnjR_removed.pdf
+/// Service to view, preview, or export the bundled resume from assets/document/SnjR_removed.pdf
 class ResumeDownloadService {
+  /// Opens the interactive visual Resume Preview screen directly without downloading to storage.
+  static void openResumePreview(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const ResumeDetailsScreen(),
+      ),
+    );
+  }
+
   /// Saves the bundled resume PDF to the device's Downloads directory and notifies the user.
   static Future<void> downloadResume(BuildContext context) async {
     try {

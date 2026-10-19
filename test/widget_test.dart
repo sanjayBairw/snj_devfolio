@@ -58,14 +58,14 @@ void main() {
       expect(navigatedTo, 1);
     });
 
-    testWidgets('Download Resume and Featured Projects are displayed',
+    testWidgets('View Resume and Featured Projects are displayed',
         (WidgetTester tester) async {
       await tester.pumpWidget(
         _wrap(Scaffold(body: HomeScreen(onNavigate: (_) {}))),
       );
       await tester.pump();
 
-      expect(find.text('Download Resume'), findsOneWidget);
+      expect(find.text('View Resume'), findsOneWidget);
       expect(find.text('Featured Projects'), findsOneWidget);
     });
   });
@@ -357,32 +357,32 @@ Google Certified Associate Android Developer
     });
   });
 
-  // ── Resume Download UI Triggers ──────────────────────────────────────────────
-  group('Resume Download UI Triggers', () {
-    testWidgets('HomeScreen shows Download Resume button',
+  // ── Resume View UI Triggers ─────────────────────────────────────────────────
+  group('Resume View UI Triggers', () {
+    testWidgets('HomeScreen shows View Resume button',
         (WidgetTester tester) async {
       await tester.pumpWidget(
         _wrap(Scaffold(body: HomeScreen(onNavigate: (_) {}))),
       );
       await tester.pump();
 
-      expect(find.text('Download Resume'), findsOneWidget);
+      expect(find.text('View Resume'), findsOneWidget);
     });
 
-    testWidgets('AboutScreen shows Download Resume button',
+    testWidgets('AboutScreen shows View Resume button',
         (WidgetTester tester) async {
       await tester.pumpWidget(
         _wrap(const Scaffold(body: AboutScreen())),
       );
       await tester.pump();
 
-      expect(find.byTooltip('Download Resume'), findsOneWidget);
+      expect(find.byTooltip('View Resume'), findsOneWidget);
       await tester.scrollUntilVisible(
-        find.text('Download Resume'),
+        find.text('View Resume'),
         200,
         scrollable: find.byType(Scrollable),
       );
-      expect(find.text('Download Resume'), findsOneWidget);
+      expect(find.text('View Resume'), findsOneWidget);
     });
   });
 }
