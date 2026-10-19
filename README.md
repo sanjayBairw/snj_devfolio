@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # SNJ Devfolio — Premium Developer Portfolio
 
 A developer portfolio for **Sanjay Bairwa** (Flutter Developer | Full Stack Developer), matching the reference design with dark neon aesthetics, GitHub REST API integration, Supabase remote project management, light/dark/system theme switching, and production builds for Android & Web.
@@ -124,3 +125,6 @@ flutter build web --release
    flutter install
    ```
    Or copy `build/app/outputs/flutter-apk/app-release.apk` directly to your phone and open it to install.
+=======
+# snj_devfolio
+>>>>>>> 70840842e5cd089975d028134951a77e993af43f
