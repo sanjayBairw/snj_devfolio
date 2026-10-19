@@ -15,6 +15,7 @@ import 'package:snj_devfolio/screens/settings_screen.dart';
 import 'package:snj_devfolio/screens/github_repos_screen.dart';
 import 'package:snj_devfolio/screens/project_details_screen.dart';
 import 'package:snj_devfolio/models/resume_data.dart';
+import 'package:snj_devfolio/screens/resume_details_screen.dart';
 import 'package:snj_devfolio/services/resume_parser_service.dart';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -385,5 +386,24 @@ Google Certified Associate Android Developer
       expect(find.text('View Resume'), findsOneWidget);
     });
   });
+
+  // ── Resume Document Viewer ──────────────────────────────────────────────────
+  group('ResumeDetailsScreen', () {
+    testWidgets('renders official resume document with links and controls',
+        (WidgetTester tester) async {
+      await tester.pumpWidget(
+        _wrap(const ResumeDetailsScreen()),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text(kResumeFileName), findsOneWidget);
+      expect(find.textContaining('Official Document'), findsOneWidget);
+      expect(find.byType(InteractiveViewer), findsOneWidget);
+      expect(find.text('Download PDF'), findsOneWidget);
+      expect(find.textContaining('Links'), findsWidgets);
+      expect(tester.takeException(), isNull);
+    });
+  });
 }
+
 

@@ -10,12 +10,15 @@ Future<void> openLink(
   if (trimmed.isEmpty) return;
   final uri = Uri.tryParse(trimmed);
   if (uri == null ||
-      (uri.scheme != 'https' && uri.scheme != 'http' && uri.scheme != 'mailto')) {
+      (uri.scheme != 'https' &&
+          uri.scheme != 'http' &&
+          uri.scheme != 'mailto' &&
+          uri.scheme != 'tel')) {
     return;
   }
   try {
     final effectiveMode = mode ??
-        (uri.scheme == 'mailto'
+        (uri.scheme == 'mailto' || uri.scheme == 'tel'
             ? LaunchMode.platformDefault
             : (trimmed.contains('drive.google.com')
                 ? LaunchMode.inAppBrowserView

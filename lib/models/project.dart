@@ -119,8 +119,7 @@ class Project {
 final List<Project> kSampleProjects = [
   Project(
     title: 'SignSpeak',
-    description:
-        'Sign Language Gesture Detection & Communication App with AI.',
+    description: 'Sign Language Gesture Detection & Communication App with AI.',
     techStack: 'Flutter • Firebase • MediaPipe',
     githubUrl: 'https://github.com/sanjayBairw/signspeak-ai-service',
     isFeatured: true,
@@ -138,7 +137,7 @@ final List<Project> kSampleProjects = [
     description:
         'My personal developer portfolio app built with Flutter & Supabase integration.',
     techStack: 'Flutter • Supabase • Dart',
-    githubUrl: 'https://github.com/sanjayBairw',
+    githubUrl: 'https://github.com/sanjayBairw/snj_devfolio',
     isFeatured: true,
     isPublished: true,
     displayOrder: 1,
@@ -151,8 +150,7 @@ final List<Project> kSampleProjects = [
   ),
   Project(
     title: 'AI Nutrition Coach',
-    description:
-        'Personal AI Nutrition & Fitness Coach for a healthier life..',
+    description: 'Personal AI Nutrition & Fitness Coach for a healthier life..',
     techStack: 'Flutter • AI/ML • Firebase',
     githubUrl: 'https://github.com/sanjayBairw',
     isFeatured: false,
@@ -183,7 +181,7 @@ final List<Project> kSampleProjects = [
     title: 'TaskFlow',
     description:
         'A clean task-management app focused on intuitive mobile UX, search, filtering, and API-ready architecture.',
-    techStack: 'Flutter • Dart • REST API',
+    techStack: 'React Native • Redux Toolkit • REST API',
     githubUrl: 'https://github.com/sanjayBairw/TaskFlow',
     isFeatured: false,
     isPublished: true,
