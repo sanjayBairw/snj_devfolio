@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import '../constants.dart';
-import '../widgets/developer_avatar.dart';
 import '../services/resume_download_service.dart';
+import '../utils/url_utils.dart';
+import '../widgets/app_ui.dart';
+import '../widgets/developer_avatar.dart';
 
-/// Screen 5 (Bottom Left) — About Me matching the reference screenshot.
+/// Screen 5 — About Me.
 class AboutScreen extends StatelessWidget {
   const AboutScreen({super.key});
 
@@ -14,18 +16,9 @@ class AboutScreen extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 14, 20, 40),
       children: [
-        // App Bar Title Area
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'About Me',
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.w900,
-                color: isDark ? Colors.white : kLightTextPrimary,
-              ),
-            ),
+        ScreenTitle(
+          'About Me',
+          actions: [
             IconButton(
               tooltip: 'View Resume',
               icon: const Icon(Icons.description_rounded, color: kAccentViolet),
@@ -33,50 +26,58 @@ class AboutScreen extends StatelessWidget {
             ),
           ],
         ),
-
         const SizedBox(height: 16),
 
-        // Glowing Avatar
         const Center(child: DeveloperAvatar(radius: 52)),
         const SizedBox(height: 18),
-
-        // Name
         Center(
           child: Text(
             kDevName,
             style: TextStyle(
               fontSize: 26,
               fontWeight: FontWeight.w900,
-              color: isDark ? Colors.white : kLightTextPrimary,
+              color: appTextPrimary(isDark),
             ),
           ),
         ),
         const SizedBox(height: 4),
-
-        // Role
         Center(
           child: Text(
             kDevRole,
+            textAlign: TextAlign.center,
             style: TextStyle(
-              color: isDark ? kDarkTextSecondary : kLightTextSecondary,
+              color: appTextSecondary(isDark),
               fontSize: 14,
               fontWeight: FontWeight.w500,
             ),
           ),
         ),
-        const SizedBox(height: 18),
+        const SizedBox(height: 12),
 
-        // Bio Paragraph
-        Container(
-          padding: const EdgeInsets.all(18),
-          decoration: BoxDecoration(
-            color: isDark ? kDarkSurface : Colors.white,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color:
-                  isDark ? Colors.white.withValues(alpha: 0.08) : kLightBorder,
+        // Social shortcuts
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            _SocialButton(
+              tooltip: 'GitHub',
+              icon: Icons.code_rounded,
+              onTap: () => openLink(kGithubUrl),
             ),
-          ),
+            _SocialButton(
+              tooltip: 'LinkedIn',
+              icon: Icons.work_rounded,
+              onTap: () => openLink(kLinkedinUrl),
+            ),
+            _SocialButton(
+              tooltip: 'X (Twitter)',
+              icon: Icons.alternate_email_rounded,
+              onTap: () => openLink(kXUrl),
+            ),
+          ],
+        ),
+        const SizedBox(height: 14),
+
+        AppCard(
           child: Text(
             kDevBio,
             textAlign: TextAlign.center,
@@ -90,69 +91,45 @@ class AboutScreen extends StatelessWidget {
 
         const SizedBox(height: 28),
 
-        // ── Skills Section (Screen 5 Reference) ─────────────────────────────
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'My Skills',
-              style: TextStyle(
-                fontSize: 19,
-                fontWeight: FontWeight.w800,
-                color: isDark ? Colors.white : kLightTextPrimary,
-              ),
+        // ── Skills, grouped by area ─────────────────────────────────────────
+        SectionHeader(
+          'My Skills',
+          trailing: Text(
+            '${kAllSkills.length} Core Skills',
+            style: const TextStyle(
+              color: kAccentViolet,
+              fontWeight: FontWeight.w600,
+              fontSize: 12,
             ),
-            const Text(
-              '8 Core Skills',
-              style: TextStyle(
-                color: kAccentViolet,
-                fontWeight: FontWeight.w600,
-                fontSize: 12,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 14),
-
-        // 2x4 Skill Grid matching reference screenshot
-        const Wrap(
-          spacing: 10,
-          runSpacing: 10,
-          children: [
-            _SkillButton('Flutter'),
-            _SkillButton('Dart'),
-            _SkillButton('Firebase'),
-            _SkillButton('Rest API'),
-            _SkillButton('FastAPI'),
-            _SkillButton('MongoDB'),
-            _SkillButton('Node.js'),
-            _SkillButton('Git'),
-          ],
-        ),
-
-        const SizedBox(height: 32),
-
-        // ── Education & Background ──────────────────────────────────────────
-        Text(
-          'Education',
-          style: TextStyle(
-            fontSize: 19,
-            fontWeight: FontWeight.w800,
-            color: isDark ? Colors.white : kLightTextPrimary,
           ),
         ),
         const SizedBox(height: 14),
 
-        Container(
-          padding: const EdgeInsets.all(18),
-          decoration: BoxDecoration(
-            color: isDark ? kDarkSurface : Colors.white,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color:
-                  isDark ? Colors.white.withValues(alpha: 0.08) : kLightBorder,
+        for (final entry in kSkillGroups.entries) ...[
+          Text(
+            entry.key,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: appTextSecondary(isDark),
             ),
           ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: [for (final s in entry.value) TagPill(s, large: true)],
+          ),
+          const SizedBox(height: 16),
+        ],
+
+        const SizedBox(height: 12),
+
+        // ── Education ───────────────────────────────────────────────────────
+        const SectionHeader('Education'),
+        const SizedBox(height: 14),
+
+        AppCard(
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -179,7 +156,7 @@ class AboutScreen extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w800,
-                        color: isDark ? Colors.white : kLightTextPrimary,
+                        color: appTextPrimary(isDark),
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -187,8 +164,7 @@ class AboutScreen extends StatelessWidget {
                       'Guru Ghasidas Central University',
                       style: TextStyle(
                         fontSize: 13,
-                        color:
-                            isDark ? kDarkTextSecondary : kLightTextSecondary,
+                        color: appTextSecondary(isDark),
                       ),
                     ),
                     const SizedBox(height: 6),
@@ -197,7 +173,7 @@ class AboutScreen extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 12,
                         height: 1.4,
-                        color: isDark ? kDarkTextMuted : Colors.grey.shade600,
+                        color: appTextMuted(isDark),
                       ),
                     ),
                   ],
@@ -209,21 +185,13 @@ class AboutScreen extends StatelessWidget {
 
         const SizedBox(height: 24),
 
-        // Resume Download Action (Bundled in assets/document)
         SizedBox(
           width: double.infinity,
           child: FilledButton.icon(
             onPressed: () => ResumeDownloadService.openResumePreview(context),
             icon: const Icon(Icons.description_rounded),
-            label: const FittedBox(
-              fit: BoxFit.scaleDown,
-              child: Text(
-                'View Resume',
-                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
-              ),
-            ),
+            label: const Text('View Resume'),
             style: FilledButton.styleFrom(
-              backgroundColor: kPrimaryPurple,
               padding: const EdgeInsets.symmetric(vertical: 16),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
@@ -236,31 +204,24 @@ class AboutScreen extends StatelessWidget {
   }
 }
 
-class _SkillButton extends StatelessWidget {
-  const _SkillButton(this.label);
-  final String label;
+class _SocialButton extends StatelessWidget {
+  const _SocialButton({
+    required this.tooltip,
+    required this.icon,
+    required this.onTap,
+  });
+
+  final String tooltip;
+  final IconData icon;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-      decoration: BoxDecoration(
-        color: isDark ? kDarkSurface2 : kLightSurface2,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: isDark ? Colors.white.withValues(alpha: 0.08) : kLightBorder,
-        ),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          color: isDark ? kDarkTextPrimary : kLightTextPrimary,
-          fontSize: 13,
-          fontWeight: FontWeight.w700,
-        ),
-      ),
+    return IconButton(
+      tooltip: tooltip,
+      onPressed: onTap,
+      icon: Icon(icon, size: 20, color: appTextSecondary(isDark)),
     );
   }
 }

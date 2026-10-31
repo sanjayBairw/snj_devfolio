@@ -1,13 +1,24 @@
 import 'package:flutter/material.dart';
 
 // ─── Supabase Configuration ───────────────────────────────────────────────────
-const String supabaseUrl = 'https://dvyzoiqhpapuvyjngtdr.supabase.co';
-const String supabaseAnonKey =
-    'sb_publishable_QsFJAiBkNwjkxnY9_pxfRQ_jb72wzcs';
+// Override at build time without editing code:
+//   flutter run --dart-define=SUPABASE_URL=... --dart-define=SUPABASE_ANON_KEY=...
+// The defaults keep the app working exactly as before.
+const String supabaseUrl = String.fromEnvironment(
+  'SUPABASE_URL',
+  defaultValue: 'https://dvyzoiqhpapuvyjngtdr.supabase.co',
+);
+const String supabaseAnonKey = String.fromEnvironment(
+  'SUPABASE_ANON_KEY',
+  defaultValue: 'sb_publishable_QsFJAiBkNwjkxnY9_pxfRQ_jb72wzcs',
+);
 
 /// The Supabase user-id that has full admin rights.
 /// Checked client-side AND enforced by Supabase Row-Level-Security.
 const String kAdminUserId = '1ac260bd-9ffd-4bc4-a277-f7bad5d38348';
+
+// ─── App ──────────────────────────────────────────────────────────────────────
+const String kAppVersion = '1.0.0+1';
 
 // ─── Profile Details ──────────────────────────────────────────────────────────
 const String kDevName = 'Sanjay Bairwa';
@@ -31,6 +42,17 @@ const String kProfileAssetPath = 'assets/images/profile.jpg';
 const String kResumeAssetPath = 'assets/document/SnjR_removed.pdf';
 const String kResumeFileName = 'Sanjay_Bairwa_Resume.pdf';
 const String kResumeImagePage1 = 'assets/document/resume_page_1.png';
+
+// ─── Skills (single source of truth for Home + About) ─────────────────────────
+const Map<String, List<String>> kSkillGroups = {
+  'Mobile': ['Flutter', 'Dart', 'Firebase'],
+  'Backend': ['Rest API', 'FastAPI', 'Node.js', 'MongoDB'],
+  'Tools': ['Git'],
+};
+
+final List<String> kAllSkills = [
+  for (final group in kSkillGroups.values) ...group,
+];
 
 // ─── Color Palette (Reference Match) ──────────────────────────────────────────
 // Dark Theme Colors
@@ -87,6 +109,11 @@ const LinearGradient kCardGradientDark = LinearGradient(
   begin: Alignment.topLeft,
   end: Alignment.bottomRight,
 );
+
+// ─── Radius Tokens ────────────────────────────────────────────────────────────
+const double kRadiusSm = 12;
+const double kRadiusMd = 16;
+const double kRadiusLg = 20;
 
 // ─── Responsive Breakpoints ───────────────────────────────────────────────────
 const double kTabletBreakpoint = 640;

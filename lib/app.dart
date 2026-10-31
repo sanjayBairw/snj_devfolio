@@ -1,10 +1,16 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'constants.dart';
 import 'screens/intro_screen.dart';
 
+const String _kThemeModeKey = 'snj_theme_mode';
+const String _kLegacyDarkKey = 'snj_theme_dark';
+const String _kAnimateThemeKey = 'snj_theme_animate';
+
 /// Root application widget.
-/// Exposes [SNJDevfolioApp.of] so child widgets can call [toggleTheme] or [setThemeMode].
+/// Exposes [SNJDevfolioApp.of] so child widgets can call [toggleTheme],
+/// [setThemeMode] or [setAnimateTheme].
 class SNJDevfolioApp extends StatefulWidget {
   const SNJDevfolioApp({super.key});
 
@@ -18,48 +24,52 @@ class SNJDevfolioApp extends StatefulWidget {
 
 class _SNJDevfolioAppState extends State<SNJDevfolioApp> {
   ThemeMode _themeMode = ThemeMode.dark;
+  bool _animateTheme = true;
 
   @override
   void initState() {
     super.initState();
-    _loadThemePreference();
+    _loadPreferences();
   }
 
-  Future<void> _loadThemePreference() async {
+  Future<void> _loadPreferences() async {
     final prefs = await SharedPreferences.getInstance();
-    final modeStr = prefs.getString('snj_theme_mode');
-    if (modeStr != null) {
-      if (modeStr == 'light') {
-        _themeMode = ThemeMode.light;
-      } else if (modeStr == 'system') {
-        _themeMode = ThemeMode.system;
-      } else {
-        _themeMode = ThemeMode.dark;
-      }
-    } else {
+    final stored = prefs.getString(_kThemeModeKey);
+    final mode = switch (stored) {
+      'light' => ThemeMode.light,
+      'system' => ThemeMode.system,
+      'dark' => ThemeMode.dark,
       // Legacy boolean key fallback
-      final isDark = prefs.getBool('snj_theme_dark') ?? true;
-      _themeMode = isDark ? ThemeMode.dark : ThemeMode.light;
-    }
-    if (mounted) setState(() {});
+      _ => (prefs.getBool(_kLegacyDarkKey) ?? true)
+          ? ThemeMode.dark
+          : ThemeMode.light,
+    };
+    final animate = prefs.getBool(_kAnimateThemeKey) ?? true;
+    if (!mounted) return;
+    setState(() {
+      _themeMode = mode;
+      _animateTheme = animate;
+    });
   }
 
   /// Explicitly set theme mode (System, Light, Dark).
   Future<void> setThemeMode(ThemeMode mode) async {
     setState(() => _themeMode = mode);
     final prefs = await SharedPreferences.getInstance();
-    String modeStr = 'dark';
-    if (mode == ThemeMode.light) modeStr = 'light';
-    if (mode == ThemeMode.system) modeStr = 'system';
-    await prefs.setString('snj_theme_mode', modeStr);
-    await prefs.setBool('snj_theme_dark', mode == ThemeMode.dark);
+    await prefs.setString(_kThemeModeKey, mode.name);
+    await prefs.setBool(_kLegacyDarkKey, mode == ThemeMode.dark);
   }
 
-  /// Toggle between dark and light.
-  Future<void> toggleTheme() async {
-    final newMode =
-        _themeMode == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark;
-    await setThemeMode(newMode);
+  /// Toggle based on what the user currently SEES, so it also works while the
+  /// mode is "System".
+  Future<void> toggleTheme() =>
+      setThemeMode(isDark ? ThemeMode.light : ThemeMode.dark);
+
+  /// Turn the smooth light/dark cross-fade on or off.
+  Future<void> setAnimateTheme(bool value) async {
+    setState(() => _animateTheme = value);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_kAnimateThemeKey, value);
   }
 
   bool get isDark {
@@ -71,6 +81,7 @@ class _SNJDevfolioAppState extends State<SNJDevfolioApp> {
   }
 
   ThemeMode get currentThemeMode => _themeMode;
+  bool get animateTheme => _animateTheme;
 
   @override
   Widget build(BuildContext context) {
@@ -78,184 +89,104 @@ class _SNJDevfolioAppState extends State<SNJDevfolioApp> {
       title: 'SNJ Devfolio',
       debugShowCheckedModeBanner: false,
       themeMode: _themeMode,
-      theme: _buildLightTheme(),
-      darkTheme: _buildDarkTheme(),
+      theme: _buildTheme(Brightness.light),
+      darkTheme: _buildTheme(Brightness.dark),
+      themeAnimationDuration:
+          _animateTheme ? const Duration(milliseconds: 350) : Duration.zero,
+      themeAnimationCurve: Curves.easeInOut,
       home: const IntroScreen(),
     );
   }
 }
 
-// ─── Reference Dark Theme ───────────────────────────────────────────────────────
-ThemeData _buildDarkTheme() {
-  return ThemeData(
-    brightness: Brightness.dark,
-    scaffoldBackgroundColor: kDarkBackground,
-    colorScheme: const ColorScheme.dark(
-      primary: kPrimaryPurple,
-      secondary: kAccentViolet,
-      tertiary: kElectricBlue,
-      surface: kDarkSurface,
-      onSurface: kDarkTextPrimary,
-    ),
-    useMaterial3: true,
-    fontFamily: 'Roboto',
-    appBarTheme: const AppBarTheme(
-      backgroundColor: kDarkBackground,
-      foregroundColor: kDarkTextPrimary,
-      elevation: 0,
-      centerTitle: false,
-      scrolledUnderElevation: 0,
-    ),
-    navigationBarTheme: NavigationBarThemeData(
-      backgroundColor: kDarkSurface,
-      indicatorColor: kPrimaryPurple.withValues(alpha: 0.25),
-      labelTextStyle: WidgetStateProperty.resolveWith((states) {
-        if (states.contains(WidgetState.selected)) {
-          return const TextStyle(
-            color: kAccentViolet,
-            fontSize: 12,
-            fontWeight: FontWeight.w700,
-          );
-        }
-        return const TextStyle(
-          color: kDarkTextSecondary,
-          fontSize: 12,
-          fontWeight: FontWeight.w500,
-        );
-      }),
-      iconTheme: WidgetStateProperty.resolveWith((states) {
-        if (states.contains(WidgetState.selected)) {
-          return const IconThemeData(color: kAccentViolet, size: 24);
-        }
-        return const IconThemeData(color: kDarkTextSecondary, size: 24);
-      }),
-    ),
-    cardTheme: CardThemeData(
-      color: kDarkSurface,
-      margin: EdgeInsets.zero,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-        side: BorderSide(color: Colors.white.withValues(alpha: 0.08)),
-      ),
-    ),
-    inputDecorationTheme: InputDecorationTheme(
-      filled: true,
-      fillColor: kDarkSurface2,
-      hintStyle: const TextStyle(color: kDarkTextMuted, fontSize: 14),
-      labelStyle: const TextStyle(color: kDarkTextSecondary, fontSize: 14),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
-        borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.08)),
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
-        borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.08)),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
-        borderSide: const BorderSide(color: kAccentViolet, width: 1.5),
-      ),
-      errorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
-        borderSide: const BorderSide(color: Colors.redAccent),
-      ),
-    ),
-    filledButtonTheme: FilledButtonThemeData(
-      style: FilledButton.styleFrom(
-        backgroundColor: kPrimaryPurple,
-        foregroundColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-        padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 14),
-        textStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
-      ),
-    ),
-    outlinedButtonTheme: OutlinedButtonThemeData(
-      style: OutlinedButton.styleFrom(
-        foregroundColor: kDarkTextPrimary,
-        side: BorderSide(color: Colors.white.withValues(alpha: 0.16)),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-        padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 14),
-        textStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-      ),
-    ),
-  );
-}
+// ─── One theme builder for both brightnesses ──────────────────────────────────
+ThemeData _buildTheme(Brightness brightness) {
+  final dark = brightness == Brightness.dark;
 
-// ─── Reference Light Theme ──────────────────────────────────────────────────────
-ThemeData _buildLightTheme() {
+  final bg = dark ? kDarkBackground : kLightBackground;
+  final surface = dark ? kDarkSurface : kLightSurface;
+  final surface2 = dark ? kDarkSurface2 : kLightSurface2;
+  final textPrimary = dark ? kDarkTextPrimary : kLightTextPrimary;
+  final textSecondary = dark ? kDarkTextSecondary : kLightTextSecondary;
+  final textMuted = dark ? kDarkTextMuted : const Color(0xFF94A3B8);
+  final border = dark ? Colors.white.withValues(alpha: 0.08) : kLightBorder;
+  final accent = dark ? kAccentViolet : kPrimaryPurple;
+
+  OutlineInputBorder outline(Color color, [double width = 1]) =>
+      OutlineInputBorder(
+        borderRadius: BorderRadius.circular(kRadiusMd),
+        borderSide: BorderSide(color: color, width: width),
+      );
+
+  final base = dark ? const ColorScheme.dark() : const ColorScheme.light();
+
   return ThemeData(
-    brightness: Brightness.light,
-    scaffoldBackgroundColor: kLightBackground,
-    colorScheme: const ColorScheme.light(
+    brightness: brightness,
+    useMaterial3: true,
+    fontFamily: 'Roboto',
+    scaffoldBackgroundColor: bg,
+    colorScheme: base.copyWith(
       primary: kPrimaryPurple,
       secondary: kAccentViolet,
       tertiary: kElectricBlue,
-      surface: kLightSurface,
-      onSurface: kLightTextPrimary,
+      surface: surface,
+      onSurface: textPrimary,
     ),
-    useMaterial3: true,
-    fontFamily: 'Roboto',
-    appBarTheme: const AppBarTheme(
-      backgroundColor: kLightBackground,
-      foregroundColor: kLightTextPrimary,
+    pageTransitionsTheme: const PageTransitionsTheme(
+      builders: {
+        TargetPlatform.android: ZoomPageTransitionsBuilder(),
+        TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+        TargetPlatform.macOS: CupertinoPageTransitionsBuilder(),
+        TargetPlatform.windows: FadeUpwardsPageTransitionsBuilder(),
+        TargetPlatform.linux: FadeUpwardsPageTransitionsBuilder(),
+        TargetPlatform.fuchsia: FadeUpwardsPageTransitionsBuilder(),
+      },
+    ),
+    appBarTheme: AppBarTheme(
+      backgroundColor: bg,
+      foregroundColor: textPrimary,
       elevation: 0,
       centerTitle: false,
       scrolledUnderElevation: 0,
     ),
     navigationBarTheme: NavigationBarThemeData(
-      backgroundColor: kLightSurface,
-      indicatorColor: kPrimaryPurple.withValues(alpha: 0.12),
+      backgroundColor: surface,
+      indicatorColor: kPrimaryPurple.withValues(alpha: dark ? 0.25 : 0.12),
       labelTextStyle: WidgetStateProperty.resolveWith((states) {
-        if (states.contains(WidgetState.selected)) {
-          return const TextStyle(
-            color: kPrimaryPurple,
-            fontSize: 12,
-            fontWeight: FontWeight.w700,
-          );
-        }
-        return const TextStyle(
-          color: kLightTextSecondary,
+        final selected = states.contains(WidgetState.selected);
+        return TextStyle(
+          color: selected ? accent : textSecondary,
           fontSize: 12,
-          fontWeight: FontWeight.w500,
+          fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
         );
       }),
       iconTheme: WidgetStateProperty.resolveWith((states) {
-        if (states.contains(WidgetState.selected)) {
-          return const IconThemeData(color: kPrimaryPurple, size: 24);
-        }
-        return const IconThemeData(color: kLightTextSecondary, size: 24);
+        final selected = states.contains(WidgetState.selected);
+        return IconThemeData(
+          color: selected ? accent : textSecondary,
+          size: 24,
+        );
       }),
     ),
     cardTheme: CardThemeData(
-      color: kLightSurface,
+      color: surface,
       margin: EdgeInsets.zero,
-      elevation: 0.5,
+      elevation: dark ? 0 : 0.5,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-        side: const BorderSide(color: kLightBorder),
+        borderRadius: BorderRadius.circular(kRadiusLg),
+        side: BorderSide(color: border),
       ),
     ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
-      fillColor: kLightSurface2,
-      hintStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 14),
-      labelStyle: const TextStyle(color: kLightTextSecondary, fontSize: 14),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
-        borderSide: const BorderSide(color: kLightBorder),
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
-        borderSide: const BorderSide(color: kLightBorder),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
-        borderSide: const BorderSide(color: kPrimaryPurple, width: 1.5),
-      ),
-      errorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
-        borderSide: const BorderSide(color: Colors.redAccent),
-      ),
+      fillColor: surface2,
+      hintStyle: TextStyle(color: textMuted, fontSize: 14),
+      labelStyle: TextStyle(color: textSecondary, fontSize: 14),
+      border: outline(border),
+      enabledBorder: outline(border),
+      focusedBorder: outline(accent, 1.5),
+      errorBorder: outline(Colors.redAccent),
+      focusedErrorBorder: outline(Colors.redAccent, 1.5),
     ),
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(
@@ -268,12 +199,18 @@ ThemeData _buildLightTheme() {
     ),
     outlinedButtonTheme: OutlinedButtonThemeData(
       style: OutlinedButton.styleFrom(
-        foregroundColor: kLightTextPrimary,
-        side: const BorderSide(color: kLightBorder),
+        foregroundColor: textPrimary,
+        side: BorderSide(
+          color: dark ? Colors.white.withValues(alpha: 0.16) : kLightBorder,
+        ),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
         padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 14),
         textStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
       ),
+    ),
+    snackBarTheme: SnackBarThemeData(
+      behavior: SnackBarBehavior.floating,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
     ),
   );
 }

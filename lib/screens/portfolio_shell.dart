@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import '../app.dart';
 import '../constants.dart';
 import '../services/supabase_service.dart';
+import 'about_screen.dart';
+import 'admin/admin_dashboard_screen.dart';
+import 'admin/admin_login_screen.dart';
+import 'contact_screen.dart';
+import 'github_repos_screen.dart';
 import 'home_screen.dart';
 import 'projects_screen.dart';
-import 'github_repos_screen.dart';
-import 'about_screen.dart';
-import 'contact_screen.dart';
 import 'settings_screen.dart';
-import 'admin/admin_login_screen.dart';
-import 'admin/admin_dashboard_screen.dart';
 
 /// Main navigation shell coordinating the portfolio screens.
 class PortfolioShell extends StatefulWidget {
@@ -22,43 +22,31 @@ class PortfolioShell extends StatefulWidget {
 class _PortfolioShellState extends State<PortfolioShell> {
   int _currentIndex = 0;
 
-  void _openAdmin() {
-    if (AuthService.isAdmin) {
-      Navigator.of(context).push(
-        MaterialPageRoute(builder: (_) => const AdminDashboardScreen()),
-      );
-    } else {
-      Navigator.of(context).push(
-        MaterialPageRoute(builder: (_) => const AdminLoginScreen()),
-      );
-    }
-  }
+  // Built once, so pages are not recreated on every rebuild and each tab keeps
+  // its state (scroll position, filters, loaded data).
+  late final List<Widget> _pages = [
+    HomeScreen(onNavigate: _goTo),
+    const ProjectsScreen(),
+    const AboutScreen(),
+    const ContactScreen(),
+  ];
 
-  void _openSettings() {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const SettingsScreen()),
-    );
-  }
+  void _goTo(int index) => setState(() => _currentIndex = index);
 
-  void _openGitHub() {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const GithubReposScreen()),
-    );
-  }
+  void _push(Widget page) =>
+      Navigator.of(context).push(MaterialPageRoute(builder: (_) => page));
+
+  void _openAdmin() => _push(
+        AuthService.isAdmin
+            ? const AdminDashboardScreen()
+            : const AdminLoginScreen(),
+      );
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final app = SNJDevfolioApp.of(context);
-    final width = MediaQuery.sizeOf(context).width;
-    final isDesktop = width >= kDesktopBreakpoint;
-
-    final pages = [
-      HomeScreen(onNavigate: (i) => setState(() => _currentIndex = i)),
-      const ProjectsScreen(),
-      const AboutScreen(),
-      const ContactScreen(),
-    ];
+    final isDesktop = MediaQuery.sizeOf(context).width >= kDesktopBreakpoint;
 
     return Scaffold(
       appBar: AppBar(
@@ -90,26 +78,23 @@ class _PortfolioShellState extends State<PortfolioShell> {
                 ),
               ),
               const SizedBox(width: 8),
-              RichText(
-                text: TextSpan(
+              Text.rich(
+                TextSpan(
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 1.0,
+                    fontSize: 16,
+                  ),
                   children: [
                     TextSpan(
                       text: 'SNJ.',
                       style: TextStyle(
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 1.0,
-                        fontSize: 16,
                         color: isDark ? Colors.white : kLightTextPrimary,
                       ),
                     ),
                     const TextSpan(
                       text: 'DEV',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 1.0,
-                        fontSize: 16,
-                        color: kAccentViolet,
-                      ),
+                      style: TextStyle(color: kAccentViolet),
                     ),
                   ],
                 ),
@@ -118,52 +103,44 @@ class _PortfolioShellState extends State<PortfolioShell> {
           ),
         ),
         actions: [
-          // Desktop Navigation Links
+          // Desktop: full link row. Phones use the bottom bar instead.
           if (isDesktop) ...[
             _DesktopNavLink(
               label: 'Home',
               isActive: _currentIndex == 0,
-              onTap: () => setState(() => _currentIndex = 0),
+              onTap: () => _goTo(0),
             ),
             _DesktopNavLink(
               label: 'Projects',
               isActive: _currentIndex == 1,
-              onTap: () => setState(() => _currentIndex = 1),
+              onTap: () => _goTo(1),
             ),
             _DesktopNavLink(
               label: 'GitHub',
               isActive: false,
-              onTap: _openGitHub,
+              onTap: () => _push(const GithubReposScreen()),
             ),
             _DesktopNavLink(
               label: 'About',
               isActive: _currentIndex == 2,
-              onTap: () => setState(() => _currentIndex = 2),
+              onTap: () => _goTo(2),
             ),
             _DesktopNavLink(
               label: 'Contact',
               isActive: _currentIndex == 3,
-              onTap: () => setState(() => _currentIndex = 3),
+              onTap: () => _goTo(3),
             ),
             const SizedBox(width: 14),
-          ],
+          ] else
+            // On desktop GitHub is already a nav link, so only show the icon here.
+            _AppBarIcon(
+              tooltip: 'GitHub Repositories',
+              icon: const Icon(Icons.code_rounded, size: 20),
+              onPressed: () => _push(const GithubReposScreen()),
+            ),
 
-          // GitHub Screen Action
-          IconButton(
-            tooltip: 'GitHub Repositories',
-            visualDensity: VisualDensity.compact,
-            constraints: const BoxConstraints(minWidth: 38, minHeight: 38),
-            padding: const EdgeInsets.all(7),
-            icon: const Icon(Icons.code_rounded, size: 20),
-            onPressed: _openGitHub,
-          ),
-
-          // Theme Toggle Action
-          IconButton(
-            tooltip: isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode',
-            visualDensity: VisualDensity.compact,
-            constraints: const BoxConstraints(minWidth: 38, minHeight: 38),
-            padding: const EdgeInsets.all(7),
+          _AppBarIcon(
+            tooltip: isDark ? 'Switch to light mode' : 'Switch to dark mode',
             onPressed: app?.toggleTheme,
             icon: AnimatedSwitcher(
               duration: const Duration(milliseconds: 300),
@@ -174,23 +151,14 @@ class _PortfolioShellState extends State<PortfolioShell> {
               ),
             ),
           ),
-
-          // Settings Action
-          IconButton(
+          _AppBarIcon(
             tooltip: 'Settings',
-            visualDensity: VisualDensity.compact,
-            constraints: const BoxConstraints(minWidth: 38, minHeight: 38),
-            padding: const EdgeInsets.all(7),
             icon: const Icon(Icons.settings_outlined, size: 20),
-            onPressed: _openSettings,
+            onPressed: () => _push(const SettingsScreen()),
           ),
-
-          // Admin Action
-          IconButton(
+          _AppBarIcon(
             tooltip: 'Admin Panel',
-            visualDensity: VisualDensity.compact,
-            constraints: const BoxConstraints(minWidth: 38, minHeight: 38),
-            padding: const EdgeInsets.all(7),
+            onPressed: _openAdmin,
             icon: Icon(
               AuthService.isAdmin
                   ? Icons.admin_panel_settings_rounded
@@ -198,7 +166,6 @@ class _PortfolioShellState extends State<PortfolioShell> {
               color: AuthService.isAdmin ? kAccentViolet : null,
               size: 20,
             ),
-            onPressed: _openAdmin,
           ),
           const SizedBox(width: 4),
         ],
@@ -206,38 +173,62 @@ class _PortfolioShellState extends State<PortfolioShell> {
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: kContentMaxWidth),
-          child: IndexedStack(
-            index: _currentIndex,
-            children: pages,
-          ),
+          child: IndexedStack(index: _currentIndex, children: _pages),
         ),
       ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _currentIndex,
-        onDestinationSelected: (i) => setState(() => _currentIndex = i),
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.home_outlined),
-            selectedIcon: Icon(Icons.home_rounded),
-            label: 'Home',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.grid_view_outlined),
-            selectedIcon: Icon(Icons.grid_view_rounded),
-            label: 'Projects',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.person_outline_rounded),
-            selectedIcon: Icon(Icons.person_rounded),
-            label: 'About',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.chat_bubble_outline_rounded),
-            selectedIcon: Icon(Icons.chat_bubble_rounded),
-            label: 'Contact',
-          ),
-        ],
-      ),
+      // Desktop already has the top links, so the bottom bar is phone/tablet only.
+      bottomNavigationBar: isDesktop
+          ? null
+          : NavigationBar(
+              selectedIndex: _currentIndex,
+              onDestinationSelected: _goTo,
+              destinations: const [
+                NavigationDestination(
+                  icon: Icon(Icons.home_outlined),
+                  selectedIcon: Icon(Icons.home_rounded),
+                  label: 'Home',
+                ),
+                NavigationDestination(
+                  icon: Icon(Icons.grid_view_outlined),
+                  selectedIcon: Icon(Icons.grid_view_rounded),
+                  label: 'Projects',
+                ),
+                NavigationDestination(
+                  icon: Icon(Icons.person_outline_rounded),
+                  selectedIcon: Icon(Icons.person_rounded),
+                  label: 'About',
+                ),
+                NavigationDestination(
+                  icon: Icon(Icons.chat_bubble_outline_rounded),
+                  selectedIcon: Icon(Icons.chat_bubble_rounded),
+                  label: 'Contact',
+                ),
+              ],
+            ),
+    );
+  }
+}
+
+class _AppBarIcon extends StatelessWidget {
+  const _AppBarIcon({
+    required this.tooltip,
+    required this.icon,
+    required this.onPressed,
+  });
+
+  final String tooltip;
+  final Widget icon;
+  final VoidCallback? onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      tooltip: tooltip,
+      visualDensity: VisualDensity.compact,
+      constraints: const BoxConstraints(minWidth: 38, minHeight: 38),
+      padding: const EdgeInsets.all(7),
+      icon: icon,
+      onPressed: onPressed,
     );
   }
 }
@@ -262,12 +253,28 @@ class _DesktopNavLink extends StatelessWidget {
         style: TextButton.styleFrom(
           foregroundColor: isActive ? kAccentViolet : null,
         ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontWeight: isActive ? FontWeight.w800 : FontWeight.w600,
-            fontSize: 14,
-          ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              label,
+              style: TextStyle(
+                fontWeight: isActive ? FontWeight.w800 : FontWeight.w600,
+                fontSize: 14,
+              ),
+            ),
+            const SizedBox(height: 3),
+            // Underline shows which page you are on.
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              height: 2,
+              width: isActive ? 20 : 0,
+              decoration: BoxDecoration(
+                gradient: kVioletPurpleGradient,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ],
         ),
       ),
     );

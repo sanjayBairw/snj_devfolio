@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import '../constants.dart';
 import '../models/project.dart';
 import '../services/supabase_service.dart';
+import '../widgets/app_ui.dart';
 import '../widgets/project_card.dart';
 
-/// Screen 3 — My Projects screen matching the reference screenshot.
+enum _Sort { defaultOrder, featuredFirst, titleAZ }
+
+/// Screen 3 — My Projects.
 class ProjectsScreen extends StatefulWidget {
   const ProjectsScreen({super.key});
 
@@ -15,15 +18,15 @@ class ProjectsScreen extends StatefulWidget {
 class _ProjectsScreenState extends State<ProjectsScreen> {
   List<Project> _allProjects = [];
   List<Project> _filteredProjects = [];
+  List<String> _filters = const ['All', 'Featured', 'GitHub'];
   bool _loading = true;
   String? _error;
   bool _usingFallback = false;
   String _selectedFilter = 'All';
   String _searchQuery = '';
   bool _isSearchOpen = false;
+  _Sort _sort = _Sort.defaultOrder;
   final TextEditingController _searchCtrl = TextEditingController();
-
-  final List<String> _filters = ['All', 'Featured', 'GitHub', 'Supabase'];
 
   @override
   void initState() {
@@ -42,41 +45,82 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
       _loading = true;
       _error = null;
     });
+
+    List<Project> projects;
+    var fallback = false;
+    String? error;
     try {
       final remote = await ProjectService.fetchPublished();
-      if (!mounted) return;
       if (remote.isEmpty) {
-        _allProjects = kSampleProjects;
-        _usingFallback = true;
+        projects = kSampleProjects;
+        fallback = true;
       } else {
-        _allProjects = remote;
-        _usingFallback = false;
+        projects = remote;
       }
     } catch (e) {
-      if (!mounted) return;
-      _allProjects = kSampleProjects;
-      _usingFallback = true;
-      _error = e.toString();
+      projects = kSampleProjects;
+      fallback = true;
+      error = e.toString();
     }
-    _applyFilter();
-    setState(() => _loading = false);
+    if (!mounted) return;
+
+    setState(() {
+      _allProjects = projects;
+      _usingFallback = fallback;
+      _error = error;
+      _filters = ['All', 'Featured', 'GitHub', ..._topTechTags(projects)];
+      if (!_filters.contains(_selectedFilter)) _selectedFilter = 'All';
+      _applyFilter();
+      _loading = false;
+    });
+  }
+
+  // ── Helpers ────────────────────────────────────────────────────────────────
+  static List<String> _techOf(Project p) => p.techStack
+      .split(RegExp(r'[,|•]'))
+      .map((e) => e.trim())
+      .where((e) => e.isNotEmpty)
+      .toList();
+
+  /// The four most common technologies across all projects, so filters
+  /// follow the real data instead of a hard-coded list.
+  static List<String> _topTechTags(List<Project> projects) {
+    final counts = <String, int>{};
+    final display = <String, String>{};
+    for (final p in projects) {
+      for (final tech in _techOf(p)) {
+        final key = tech.toLowerCase();
+        counts[key] = (counts[key] ?? 0) + 1;
+        display.putIfAbsent(key, () => tech);
+      }
+    }
+    final keys = counts.keys.toList()
+      ..sort((a, b) {
+        final byCount = counts[b]!.compareTo(counts[a]!);
+        return byCount != 0 ? byCount : a.compareTo(b);
+      });
+    return keys.take(4).map((k) => display[k]!).toList();
   }
 
   void _applyFilter() {
-    List<Project> list = List.from(_allProjects);
+    var list = List<Project>.from(_allProjects);
 
-    // Apply category filter
-    if (_selectedFilter == 'Featured') {
-      list = list.where((p) => p.isFeatured).toList();
-    } else if (_selectedFilter == 'GitHub') {
-      list = list.where((p) => p.githubUrl.trim().isNotEmpty).toList();
-    } else if (_selectedFilter == 'Supabase') {
-      list = list.where((p) => p.techStack.toLowerCase().contains('supabase')).toList();
+    switch (_selectedFilter) {
+      case 'All':
+        break;
+      case 'Featured':
+        list = list.where((p) => p.isFeatured).toList();
+      case 'GitHub':
+        list = list.where((p) => p.githubUrl.trim().isNotEmpty).toList();
+      default:
+        final tech = _selectedFilter.toLowerCase();
+        list = list
+            .where((p) => _techOf(p).any((t) => t.toLowerCase() == tech))
+            .toList();
     }
 
-    // Apply search query
-    if (_searchQuery.trim().isNotEmpty) {
-      final q = _searchQuery.toLowerCase();
+    final q = _searchQuery.trim().toLowerCase();
+    if (q.isNotEmpty) {
       list = list.where((p) {
         return p.title.toLowerCase().contains(q) ||
             p.description.toLowerCase().contains(q) ||
@@ -84,45 +128,76 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
       }).toList();
     }
 
+    switch (_sort) {
+      case _Sort.defaultOrder:
+        break;
+      case _Sort.featuredFirst:
+        list = [
+          ...list.where((p) => p.isFeatured),
+          ...list.where((p) => !p.isFeatured),
+        ];
+      case _Sort.titleAZ:
+        list.sort(
+          (a, b) => a.title.toLowerCase().compareTo(b.title.toLowerCase()),
+        );
+    }
+
     _filteredProjects = list;
   }
 
+  void _resetFilters() {
+    setState(() {
+      _selectedFilter = 'All';
+      _searchQuery = '';
+      _searchCtrl.clear();
+      _applyFilter();
+    });
+  }
+
+  // ── UI ─────────────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    if (_loading) {
-      return const Center(
-        child: CircularProgressIndicator(
-          color: kAccentViolet,
-        ),
-      );
-    }
+    final showSkeleton = _loading && _allProjects.isEmpty;
 
     return RefreshIndicator(
       onRefresh: _load,
       color: kAccentViolet,
       child: ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.fromLTRB(20, 14, 20, 40),
         children: [
-          // Header + Search Row
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  'My Projects',
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w900,
-                    color: isDark ? Colors.white : kLightTextPrimary,
+          ScreenTitle(
+            'My Projects',
+            actions: [
+              PopupMenuButton<_Sort>(
+                tooltip: 'Sort',
+                initialValue: _sort,
+                icon: Icon(Icons.sort_rounded, color: appTextPrimary(isDark)),
+                onSelected: (value) => setState(() {
+                  _sort = value;
+                  _applyFilter();
+                }),
+                itemBuilder: (_) => const [
+                  PopupMenuItem(
+                    value: _Sort.defaultOrder,
+                    child: Text('Default order'),
                   ),
-                ),
+                  PopupMenuItem(
+                    value: _Sort.featuredFirst,
+                    child: Text('Featured first'),
+                  ),
+                  PopupMenuItem(
+                    value: _Sort.titleAZ,
+                    child: Text('Title A–Z'),
+                  ),
+                ],
               ),
               IconButton(
-                tooltip: _isSearchOpen ? 'Close Search' : 'Search Projects',
+                tooltip: _isSearchOpen ? 'Close search' : 'Search projects',
                 icon: Icon(
                   _isSearchOpen ? Icons.close_rounded : Icons.search_rounded,
-                  color: isDark ? Colors.white : kLightTextPrimary,
+                  color: appTextPrimary(isDark),
                 ),
                 onPressed: () {
                   setState(() {
@@ -138,7 +213,6 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
             ],
           ),
 
-          // Search Field when toggled
           if (_isSearchOpen) ...[
             const SizedBox(height: 10),
             TextField(
@@ -147,9 +221,13 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
               decoration: InputDecoration(
                 hintText: 'Search by title, tech stack, or description...',
                 prefixIcon: const Icon(Icons.search_rounded, size: 20),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
                 suffixIcon: _searchCtrl.text.isNotEmpty
                     ? IconButton(
+                        tooltip: 'Clear search',
                         icon: const Icon(Icons.clear_rounded, size: 18),
                         onPressed: () {
                           _searchCtrl.clear();
@@ -159,159 +237,195 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
                           });
                         },
                       )
-                    : null,
+: null,
               ),
-              onChanged: (val) {
-                setState(() {
-                  _searchQuery = val;
-                  _applyFilter();
-                });
-              },
+              onChanged: (val) => setState(() {
+                _searchQuery = val;
+                _applyFilter();
+              }),
             ),
           ],
 
           const SizedBox(height: 14),
 
-          // Horizontal Filter Chips (Screen 3 Reference)
+          // Filter chips
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
-              children: _filters.map((filter) {
-                final isSelected = _selectedFilter == filter;
-                return Padding(
-                  padding: const EdgeInsets.only(right: 10),
-                  child: GestureDetector(
-                    onTap: () {
-                      setState(() {
+              children: [
+                for (final filter in _filters)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 10),
+                    child: _FilterChipButton(
+                      label: filter,
+                      selected: _selectedFilter == filter,
+                      isDark: isDark,
+                      onTap: () => setState(() {
                         _selectedFilter = filter;
                         _applyFilter();
-                      });
-                    },
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 8),
-                      decoration: BoxDecoration(
-                        gradient: isSelected ? kVioletPurpleGradient : null,
-                        color: isSelected
-                            ? null
-                            : (isDark ? kDarkSurface : Colors.white),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: isSelected
-                              ? Colors.transparent
-                              : (isDark
-                                  ? Colors.white.withValues(alpha: 0.08)
-                                  : kLightBorder),
-                        ),
-                        boxShadow: isSelected
-                            ? [
-                                BoxShadow(
-                                  color: kPrimaryPurple.withValues(alpha: 0.4),
-                                  blurRadius: 10,
-                                  offset: const Offset(0, 3),
-                                ),
-                              ]
-                            : null,
-                      ),
-                      child: Text(
-                        filter,
-                        style: TextStyle(
-                          color: isSelected
-                              ? Colors.white
-                              : (isDark ? kDarkTextSecondary : kLightTextSecondary),
-                          fontWeight:
-                              isSelected ? FontWeight.w700 : FontWeight.w500,
-                          fontSize: 13,
-                        ),
-                      ),
+                      }),
                     ),
                   ),
-                );
-              }).toList(),
+              ],
             ),
           ),
 
-          const SizedBox(height: 18),
+          const SizedBox(height: 14),
 
-          // Fallback notice banner if remote DB is empty
-          if (_usingFallback) ...[
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              decoration: BoxDecoration(
-                color: isDark
-                    ? kPrimaryPurple.withValues(alpha: 0.1)
-                    : const Color(0xFFF3E8FF),
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(
-                  color: kAccentViolet.withValues(alpha: 0.3),
-                ),
-              ),
-              child: Row(
-                children: [
-                  const Icon(
-                    Icons.info_outline_rounded,
-                    size: 18,
-                    color: kAccentViolet,
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      _error != null
-                          ? 'Showing curated sample projects (database connection pending).'
-                          : 'Curated projects loaded. Changes in admin panel reflect instantly.',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: isDark ? kDarkTextSecondary : kLightTextSecondary,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+          if (!showSkeleton)
+            Text(
+              '${_filteredProjects.length} of ${_allProjects.length} projects',
+              style: TextStyle(fontSize: 12, color: appTextMuted(isDark)),
+            ),
+
+          const SizedBox(height: 10),
+
+          // Fallback notice
+          if (_usingFallback && !showSkeleton) ...[
+            _FallbackBanner(
+              isDark: isDark,
+              hasError: _error != null,
+              onRetry: _load,
             ),
             const SizedBox(height: 14),
           ],
 
-          // Projects List
-          if (_filteredProjects.isEmpty) ...[
-            const SizedBox(height: 40),
-            Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.filter_list_off_rounded,
-                    size: 48,
-                    color: isDark ? kDarkTextMuted : Colors.grey,
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    'No projects match "$_searchQuery"',
-                    style: const TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                  const SizedBox(height: 6),
-                  TextButton(
-                    onPressed: () {
-                      setState(() {
-                        _selectedFilter = 'All';
-                        _searchQuery = '';
-                        _searchCtrl.clear();
-                        _applyFilter();
-                      });
-                    },
-                    child: const Text('Reset filters'),
-                  ),
-                ],
-              ),
+          // Body
+          if (showSkeleton) ...[
+            const ProjectCardSkeleton(),
+            const SizedBox(height: 14),
+            const ProjectCardSkeleton(),
+            const SizedBox(height: 14),
+            const ProjectCardSkeleton(),
+          ] else if (_filteredProjects.isEmpty)
+            EmptyState(
+              icon: Icons.filter_list_off_rounded,
+              title: _searchQuery.trim().isNotEmpty
+                  ? 'No projects match "${_searchQuery.trim()}"'
+                  : _selectedFilter != 'All'
+                      ? 'No projects under "$_selectedFilter"'
+                      : 'No projects yet',
+              message: 'Try a different search or clear the filters.',
+              actionLabel: 'Reset filters',
+              onAction: _resetFilters,
+            )
+          else
+            LayoutBuilder(
+              builder: (context, constraints) {
+                const gap = 14.0;
+                final twoColumns = constraints.maxWidth >= 720;
+                final cardWidth = twoColumns
+                    ? (constraints.maxWidth - gap) / 2
+                    : constraints.maxWidth;
+                return Wrap(
+                  spacing: gap,
+                  runSpacing: gap,
+                  children: [
+                    for (final p in _filteredProjects)
+                      SizedBox(width: cardWidth, child: ProjectCard(project: p)),
+                  ],
+                );
+              },
             ),
-          ] else ...[
-            ..._filteredProjects.map(
-              (p) => Padding(
-                padding: const EdgeInsets.only(bottom: 14),
-                child: ProjectCard(project: p),
-              ),
+        ],
+      ),
+    );
+  }
+}
+
+class _FilterChipButton extends StatelessWidget {
+  const _FilterChipButton({
+    required this.label,
+    required this.selected,
+    required this.isDark,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final bool isDark;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      type: MaterialType.transparency,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+          decoration: BoxDecoration(
+            gradient: selected ? kVioletPurpleGradient : null,
+            color: selected ? null : (isDark ? kDarkSurface : Colors.white),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: selected ? Colors.transparent : appBorderColor(isDark),
             ),
-          ],
+            boxShadow: selected
+                ? [
+                    BoxShadow(
+                      color: kPrimaryPurple.withValues(alpha: 0.4),
+                      blurRadius: 10,
+                      offset: const Offset(0, 3),
+                    ),
+                  ]
+                : null,
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              color: selected ? Colors.white : appTextSecondary(isDark),
+              fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+              fontSize: 13,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _FallbackBanner extends StatelessWidget {
+  const _FallbackBanner({
+    required this.isDark,
+    required this.hasError,
+    required this.onRetry,
+  });
+
+  final bool isDark;
+  final bool hasError;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: isDark
+            ? kPrimaryPurple.withValues(alpha: 0.1)
+            : const Color(0xFFF3E8FF),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: kAccentViolet.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        children: [
+          const Icon(
+            Icons.info_outline_rounded,
+            size: 18,
+            color: kAccentViolet,
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              hasError
+                  ? "Couldn't reach the project database. Showing sample projects."
+                  : 'No published projects yet. Showing sample projects.',
+              style: TextStyle(fontSize: 12, color: appTextSecondary(isDark)),
+            ),
+          ),
+          TextButton(onPressed: onRetry, child: const Text('Retry')),
         ],
       ),
     );

@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../app.dart';
 import '../constants.dart';
+import '../services/resume_download_service.dart';
+import '../utils/url_utils.dart';
+import '../widgets/app_ui.dart';
 import '../widgets/developer_avatar.dart';
 import 'github_repos_screen.dart';
 
-/// Screen 7 — Settings screen matching the reference screenshot.
+/// Screen 7 — Settings.
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
 
@@ -14,45 +17,35 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  bool _dynamicTransitions = true;
+  // The app state updates its own fields synchronously, so we only need to
+  // rebuild here. Without this the selected card did not refresh when the
+  // brightness stayed the same (for example System -> Dark on a dark phone).
+  void _setMode(ThemeMode mode) {
+    SNJDevfolioApp.of(context)?.setThemeMode(mode);
+    setState(() {});
+  }
+
+  void _setAnimate(bool value) {
+    SNJDevfolioApp.of(context)?.setAnimateTheme(value);
+    setState(() {});
+  }
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final app = SNJDevfolioApp.of(context);
     final currentMode = app?.currentThemeMode ?? ThemeMode.dark;
+    final animate = app?.animateTheme ?? true;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Settings'),
-        actions: [
-          IconButton(
-            tooltip: 'Notifications',
-            icon: const Icon(Icons.notifications_none_rounded),
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Notifications are up to date.')),
-              );
-            },
-          ),
-          const SizedBox(width: 8),
-        ],
-      ),
+      appBar: AppBar(title: const Text('Settings')),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 10, 20, 40),
         children: [
-          // ── Profile Overview Tile (Screen 7 Reference) ────────────────────
-          Container(
+          // Profile tile (opens GitHub, which the chevron already promised)
+          AppCard(
             padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: isDark ? kDarkSurface : Colors.white,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: isDark
-                    ? Colors.white.withValues(alpha: 0.08)
-                    : kLightBorder,
-              ),
-            ),
+            onTap: () => openLink(kGithubUrl),
             child: Row(
               children: [
                 const DeveloperAvatar(radius: 26, showGlow: false),
@@ -66,7 +59,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w800,
-                          color: isDark ? Colors.white : kLightTextPrimary,
+                          color: appTextPrimary(isDark),
                         ),
                       ),
                       const SizedBox(height: 2),
@@ -74,7 +67,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         kGithubUsername,
                         style: TextStyle(
                           fontSize: 13,
-                          color: isDark ? kDarkTextSecondary : kLightTextSecondary,
+                          color: appTextSecondary(isDark),
                         ),
                       ),
                     ],
@@ -82,7 +75,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
                 Icon(
                   Icons.chevron_right_rounded,
-                  color: isDark ? kDarkTextMuted : Colors.grey,
+                  color: appTextMuted(isDark),
                 ),
               ],
             ),
@@ -90,18 +83,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
           const SizedBox(height: 24),
 
-          // ── Appearance Section (Screen 7 Reference) ───────────────────────
-          Text(
-            'Appearance',
-            style: TextStyle(
-              fontSize: 17,
-              fontWeight: FontWeight.w800,
-              color: isDark ? Colors.white : kLightTextPrimary,
-            ),
-          ),
+          const SectionHeader('Appearance'),
           const SizedBox(height: 14),
 
-          // 3 Theme Mode Selector Cards
           Row(
             children: [
               Expanded(
@@ -110,7 +94,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   label: 'System\n(Default)',
                   isSelected: currentMode == ThemeMode.system,
                   isDark: isDark,
-                  onTap: () => app?.setThemeMode(ThemeMode.system),
+                  onTap: () => _setMode(ThemeMode.system),
                 ),
               ),
               const SizedBox(width: 10),
@@ -120,7 +104,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   label: 'Light\nMode',
                   isSelected: currentMode == ThemeMode.light,
                   isDark: isDark,
-                  onTap: () => app?.setThemeMode(ThemeMode.light),
+                  onTap: () => _setMode(ThemeMode.light),
                 ),
               ),
               const SizedBox(width: 10),
@@ -130,7 +114,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   label: 'Dark\nMode',
                   isSelected: currentMode == ThemeMode.dark,
                   isDark: isDark,
-                  onTap: () => app?.setThemeMode(ThemeMode.dark),
+                  onTap: () => _setMode(ThemeMode.dark),
                 ),
               ),
             ],
@@ -138,49 +122,41 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
           const SizedBox(height: 16),
 
-          // Dynamic Theme Switch ListTile
-          Container(
+          // This switch now actually controls the theme cross-fade
+          // and remembers the choice.
+          AppCard(
+            radius: 18,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              color: isDark ? kDarkSurface : Colors.white,
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(
-                color: isDark
-                    ? Colors.white.withValues(alpha: 0.08)
-                    : kLightBorder,
-              ),
-            ),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Dynamic Theme',
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                        color: isDark ? Colors.white : kLightTextPrimary,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Animate theme change',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: appTextPrimary(isDark),
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      'Smooth transitions',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: isDark ? kDarkTextSecondary : kLightTextSecondary,
+                      const SizedBox(height: 2),
+                      Text(
+                        'Fade between light and dark',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: appTextSecondary(isDark),
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
                 Switch.adaptive(
-                  value: _dynamicTransitions,
+                  value: animate,
                   activeTrackColor: kPrimaryPurple,
                   activeThumbColor: kAccentViolet,
-                  onChanged: (val) {
-                    setState(() => _dynamicTransitions = val);
-                  },
+                  onChanged: _setAnimate,
                 ),
               ],
             ),
@@ -188,100 +164,89 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
           const SizedBox(height: 24),
 
-          // ── App Information & Legal Links ─────────────────────────────────
           _SettingsLinkTile(
-            icon: Icons.info_outline_rounded,
-            title: 'App Information',
-            isDark: isDark,
-            onTap: () {
-              showAboutDialog(
-                context: context,
-                applicationName: 'SNJ Devfolio',
-                applicationVersion: '1.0.0+1',
-                applicationLegalese: '© 2026 Sanjay Bairwa. All rights reserved.',
-                children: const [
-                  SizedBox(height: 12),
-                  Text(
-                    'SNJ Devfolio is a professional developer portfolio powered by Flutter, Supabase remote management, and GitHub REST API integration.',
-                  ),
-                ],
-              );
-            },
-          ),
-          const SizedBox(height: 10),
-          _SettingsLinkTile(
-            icon: Icons.security_rounded,
-            title: 'Privacy Policy',
-            isDark: isDark,
-            onTap: () {
-              _showPolicyDialog(
-                context,
-                title: 'Privacy Policy',
-                content:
-                    'SNJ Devfolio respects your privacy. No personal visitor data, tracking cookies, or contact messages are stored on private servers without explicit consent.',
-              );
-            },
-          ),
-          const SizedBox(height: 10),
-          _SettingsLinkTile(
-            icon: Icons.description_outlined,
-            title: 'Terms & Conditions',
-            isDark: isDark,
-            onTap: () {
-              _showPolicyDialog(
-                context,
-                title: 'Terms & Conditions',
-                content:
-                    'All project code, design layouts, and showcase assets are properties of Sanjay Bairwa or their respective open-source licenses.',
-              );
-            },
+            icon: Icons.description_rounded,
+            title: 'View Resume',
+            onTap: () => ResumeDownloadService.openResumePreview(context),
           ),
           const SizedBox(height: 10),
           _SettingsLinkTile(
             icon: Icons.code_rounded,
             title: 'GitHub Repositories',
-            isDark: isDark,
-            onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const GithubReposScreen()),
-              );
-            },
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const GithubReposScreen()),
+            ),
           ),
           const SizedBox(height: 10),
           _SettingsLinkTile(
             icon: Icons.share_rounded,
             title: 'Share Portfolio',
-            isDark: isDark,
             onTap: () {
-              Clipboard.setData(const ClipboardData(
-                text: 'Sanjay Bairwa — Flutter Developer Portfolio\nEmail: $kContactEmail',
-              ));
+              Clipboard.setData(
+                const ClipboardData(
+                  text: '$kDevName — Flutter Developer Portfolio\n'
+                      'GitHub: $kGithubUrl\n'
+                      'Email: $kContactEmail',
+                ),
+              );
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
-                  content: Text('Portfolio details copied to clipboard!'),
-                  backgroundColor: kPrimaryPurple,
+                  content: Text('Portfolio details copied to clipboard'),
                 ),
               );
             },
+          ),
+          const SizedBox(height: 10),
+          _SettingsLinkTile(
+            icon: Icons.info_outline_rounded,
+            title: 'App Information',
+            onTap: () => showAboutDialog(
+              context: context,
+              applicationName: 'SNJ Devfolio',
+              applicationVersion: kAppVersion,
+              applicationLegalese: '© 2026 $kDevName. All rights reserved.',
+              children: const [
+                SizedBox(height: 12),
+                Text(
+                  'SNJ Devfolio is a developer portfolio built with Flutter, Supabase and the GitHub REST API.',
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 10),
+          _SettingsLinkTile(
+            icon: Icons.security_rounded,
+            title: 'Privacy Policy',
+            onTap: () => _showPolicyDialog(
+              title: 'Privacy Policy',
+              content:
+                  'SNJ Devfolio respects your privacy. No personal visitor data, tracking cookies, or contact messages are stored on private servers without explicit consent.',
+            ),
+          ),
+          const SizedBox(height: 10),
+          _SettingsLinkTile(
+            icon: Icons.gavel_rounded,
+            title: 'Terms & Conditions',
+            onTap: () => _showPolicyDialog(
+              title: 'Terms & Conditions',
+              content:
+                  'All project code, design layouts, and showcase assets are properties of $kDevName or their respective open-source licenses.',
+            ),
           ),
         ],
       ),
     );
   }
 
-  void _showPolicyDialog(
-    BuildContext context, {
-    required String title,
-    required String content,
-  }) {
-    showDialog(
+  void _showPolicyDialog({required String title, required String content}) {
+    showDialog<void>(
       context: context,
-      builder: (_) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: Text(title),
         content: Text(content),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: const Text('Close'),
           ),
         ],
@@ -307,53 +272,60 @@ class _ThemeModeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? (isDark ? const Color(0xFF1E1B4B) : const Color(0xFFEDE9FE))
-              : (isDark ? kDarkSurface : Colors.white),
+    return Semantics(
+      button: true,
+      selected: isSelected,
+      label: label.replaceAll('\n', ' '),
+      child: Material(
+        type: MaterialType.transparency,
+        child: InkWell(
           borderRadius: BorderRadius.circular(18),
-          border: Border.all(
-            color: isSelected
-                ? kAccentViolet
-                : (isDark ? Colors.white.withValues(alpha: 0.08) : kLightBorder),
-            width: isSelected ? 2.0 : 1.0,
-          ),
-          boxShadow: isSelected
-              ? [
-                  BoxShadow(
-                    color: kPrimaryPurple.withValues(alpha: 0.3),
-                    blurRadius: 10,
-                  ),
-                ]
-              : null,
-        ),
-        child: Column(
-          children: [
-            Icon(
-              icon,
-              size: 24,
+          onTap: onTap,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            decoration: BoxDecoration(
               color: isSelected
-                  ? kAccentViolet
-                  : (isDark ? kDarkTextSecondary : kLightTextSecondary),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              label,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: isSelected ? FontWeight.w800 : FontWeight.w500,
-                color: isSelected
-                    ? (isDark ? Colors.white : kPrimaryPurple)
-                    : (isDark ? kDarkTextSecondary : kLightTextSecondary),
+                  ? (isDark ? const Color(0xFF1E1B4B) : const Color(0xFFEDE9FE))
+                  : (isDark ? kDarkSurface : Colors.white),
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(
+                color: isSelected ? kAccentViolet : appBorderColor(isDark),
+                width: isSelected ? 2.0 : 1.0,
               ),
+              boxShadow: isSelected
+                  ? [
+                      BoxShadow(
+                        color: kPrimaryPurple.withValues(alpha: 0.3),
+                        blurRadius: 10,
+                      ),
+                    ]
+                  : null,
             ),
-          ],
+            child: Column(
+              children: [
+                Icon(
+                  icon,
+                  size: 24,
+                  color: isSelected
+                      ? kAccentViolet
+                      : appTextSecondary(isDark),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  label,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: isSelected ? FontWeight.w800 : FontWeight.w500,
+                    color: isSelected
+                        ? (isDark ? Colors.white : kPrimaryPurple)
+                        : appTextSecondary(isDark),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -364,43 +336,36 @@ class _SettingsLinkTile extends StatelessWidget {
   const _SettingsLinkTile({
     required this.icon,
     required this.title,
-    required this.isDark,
     required this.onTap,
   });
 
   final IconData icon;
   final String title;
-  final bool isDark;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: isDark ? kDarkSurface : Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: isDark ? Colors.white.withValues(alpha: 0.08) : kLightBorder,
-        ),
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: ListTile(
-          leading: Icon(icon, color: kAccentViolet, size: 22),
-          title: Text(
-            title,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: isDark ? Colors.white : kLightTextPrimary,
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return AppCard(
+      radius: 18,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      onTap: onTap,
+      child: Row(
+        children: [
+          Icon(icon, color: kAccentViolet, size: 22),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Text(
+              title,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: appTextPrimary(isDark),
+              ),
             ),
           ),
-          trailing: Icon(
-            Icons.chevron_right_rounded,
-            color: isDark ? kDarkTextMuted : Colors.grey,
-          ),
-          onTap: onTap,
-        ),
+          Icon(Icons.chevron_right_rounded, color: appTextMuted(isDark)),
+        ],
       ),
     );
   }
