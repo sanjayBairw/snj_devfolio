@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../constants.dart';
+import 'app_ui.dart';
 
-/// Icon + title + description card.
+/// Minimalist info card with clean borders.
 class InfoCard extends StatelessWidget {
   const InfoCard({
     super.key,
@@ -9,6 +11,7 @@ class InfoCard extends StatelessWidget {
     required this.title,
     required this.description,
   });
+
   final IconData icon;
   final String title;
   final String description;
@@ -17,48 +20,43 @@ class InfoCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: isDark ? kPanel : Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: isDark
-              ? Colors.white.withValues(alpha: .05)
-              : const Color(0xFFDDE3EA),
-        ),
-        boxShadow: isDark
-            ? []
-            : [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: .04),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
+        color: isDark ? kDarkSurface : Colors.white,
+        borderRadius: BorderRadius.circular(kRadiusMd),
+        border: Border.all(color: appBorderColor(isDark)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(
-            icon,
-            color: isDark ? kAccent : const Color(0xFF1A6B8A),
-            size: 25,
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: kAccentViolet.withValues(alpha: isDark ? 0.15 : 0.1),
+              borderRadius: BorderRadius.circular(kRadiusSm),
+            ),
+            child: Icon(icon, color: kAccentViolet, size: 22),
           ),
-          const SizedBox(width: 13),
+          const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   title,
-                  style: const TextStyle(fontWeight: FontWeight.w800),
+                  style: GoogleFonts.spaceGrotesk(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 16,
+                    color: appTextPrimary(isDark),
+                  ),
                 ),
-                const SizedBox(height: 5),
+                const SizedBox(height: 4),
                 Text(
                   description,
-                  style: TextStyle(
-                    color: isDark ? kMuted : const Color(0xFF546E7A),
-                    height: 1.45,
+                  style: GoogleFonts.inter(
+                    color: appTextSecondary(isDark),
+                    fontSize: 13,
+                    height: 1.5,
                   ),
                 ),
               ],

@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'constants.dart';
 import 'screens/intro_screen.dart';
@@ -108,9 +109,9 @@ ThemeData _buildTheme(Brightness brightness) {
   final surface2 = dark ? kDarkSurface2 : kLightSurface2;
   final textPrimary = dark ? kDarkTextPrimary : kLightTextPrimary;
   final textSecondary = dark ? kDarkTextSecondary : kLightTextSecondary;
-  final textMuted = dark ? kDarkTextMuted : const Color(0xFF94A3B8);
-  final border = dark ? Colors.white.withValues(alpha: 0.08) : kLightBorder;
-  final accent = dark ? kAccentViolet : kPrimaryPurple;
+  final textMuted = dark ? kDarkTextMuted : kLightTextMuted;
+  final border = dark ? kDarkBorder : kLightBorder;
+  const accent = kAccentViolet;
 
   OutlineInputBorder outline(Color color, [double width = 1]) =>
       OutlineInputBorder(
@@ -120,17 +121,79 @@ ThemeData _buildTheme(Brightness brightness) {
 
   final base = dark ? const ColorScheme.dark() : const ColorScheme.light();
 
+  final interBase = GoogleFonts.interTextTheme(
+    dark ? ThemeData.dark().textTheme : ThemeData.light().textTheme,
+  );
+
+  final textTheme = interBase.copyWith(
+    displayLarge: GoogleFonts.spaceGrotesk(
+      fontSize: 48,
+      fontWeight: FontWeight.w800,
+      color: textPrimary,
+      letterSpacing: -1.2,
+      height: 1.1,
+    ),
+    displayMedium: GoogleFonts.spaceGrotesk(
+      fontSize: 34,
+      fontWeight: FontWeight.w800,
+      color: textPrimary,
+      letterSpacing: -0.8,
+      height: 1.15,
+    ),
+    displaySmall: GoogleFonts.spaceGrotesk(
+      fontSize: 24,
+      fontWeight: FontWeight.w700,
+      color: textPrimary,
+      letterSpacing: -0.4,
+      height: 1.25,
+    ),
+    headlineMedium: GoogleFonts.spaceGrotesk(
+      fontSize: 20,
+      fontWeight: FontWeight.w700,
+      color: textPrimary,
+      letterSpacing: -0.2,
+    ),
+    titleLarge: GoogleFonts.spaceGrotesk(
+      fontSize: 18,
+      fontWeight: FontWeight.w700,
+      color: textPrimary,
+    ),
+    titleMedium: GoogleFonts.inter(
+      fontSize: 15,
+      fontWeight: FontWeight.w600,
+      color: textPrimary,
+    ),
+    bodyLarge: GoogleFonts.inter(
+      fontSize: 15,
+      fontWeight: FontWeight.w400,
+      color: textSecondary,
+      height: 1.55,
+    ),
+    bodyMedium: GoogleFonts.inter(
+      fontSize: 13,
+      fontWeight: FontWeight.w400,
+      color: textSecondary,
+      height: 1.5,
+    ),
+    labelLarge: GoogleFonts.inter(
+      fontSize: 14,
+      fontWeight: FontWeight.w600,
+      color: textPrimary,
+    ),
+  );
+
   return ThemeData(
     brightness: brightness,
     useMaterial3: true,
-    fontFamily: 'Roboto',
     scaffoldBackgroundColor: bg,
+    textTheme: textTheme,
     colorScheme: base.copyWith(
-      primary: kPrimaryPurple,
-      secondary: kAccentViolet,
-      tertiary: kElectricBlue,
+      primary: kAccentViolet,
+      secondary: kAccentBlue,
+      tertiary: kEmeraldGreen,
       surface: surface,
       onSurface: textPrimary,
+      outline: border,
     ),
     pageTransitionsTheme: const PageTransitionsTheme(
       builders: {
@@ -148,15 +211,20 @@ ThemeData _buildTheme(Brightness brightness) {
       elevation: 0,
       centerTitle: false,
       scrolledUnderElevation: 0,
+      titleTextStyle: GoogleFonts.spaceGrotesk(
+        fontSize: 18,
+        fontWeight: FontWeight.w700,
+        color: textPrimary,
+      ),
     ),
     navigationBarTheme: NavigationBarThemeData(
       backgroundColor: surface,
-      indicatorColor: kPrimaryPurple.withValues(alpha: dark ? 0.25 : 0.12),
+      indicatorColor: kAccentViolet.withValues(alpha: dark ? 0.22 : 0.12),
       labelTextStyle: WidgetStateProperty.resolveWith((states) {
         final selected = states.contains(WidgetState.selected);
-        return TextStyle(
+        return GoogleFonts.inter(
           color: selected ? accent : textSecondary,
-          fontSize: 12,
+          fontSize: 11,
           fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
         );
       }),
@@ -164,14 +232,14 @@ ThemeData _buildTheme(Brightness brightness) {
         final selected = states.contains(WidgetState.selected);
         return IconThemeData(
           color: selected ? accent : textSecondary,
-          size: 24,
+          size: 22,
         );
       }),
     ),
     cardTheme: CardThemeData(
       color: surface,
       margin: EdgeInsets.zero,
-      elevation: dark ? 0 : 0.5,
+      elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(kRadiusLg),
         side: BorderSide(color: border),
@@ -180,37 +248,38 @@ ThemeData _buildTheme(Brightness brightness) {
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
       fillColor: surface2,
-      hintStyle: TextStyle(color: textMuted, fontSize: 14),
-      labelStyle: TextStyle(color: textSecondary, fontSize: 14),
+      hintStyle: GoogleFonts.inter(color: textMuted, fontSize: 13),
+      labelStyle: GoogleFonts.inter(color: textSecondary, fontSize: 13),
       border: outline(border),
       enabledBorder: outline(border),
-      focusedBorder: outline(accent, 1.5),
+      focusedBorder: outline(accent, 1.4),
       errorBorder: outline(Colors.redAccent),
-      focusedErrorBorder: outline(Colors.redAccent, 1.5),
+      focusedErrorBorder: outline(Colors.redAccent, 1.4),
     ),
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(
-        backgroundColor: kPrimaryPurple,
+        backgroundColor: kAccentViolet,
         foregroundColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(kRadiusMd)),
         padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 14),
-        textStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+        textStyle: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 14),
       ),
     ),
     outlinedButtonTheme: OutlinedButtonThemeData(
       style: OutlinedButton.styleFrom(
         foregroundColor: textPrimary,
-        side: BorderSide(
-          color: dark ? Colors.white.withValues(alpha: 0.16) : kLightBorder,
-        ),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        side: BorderSide(color: border),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(kRadiusMd)),
         padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 14),
-        textStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+        textStyle: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 14),
       ),
     ),
     snackBarTheme: SnackBarThemeData(
       behavior: SnackBarBehavior.floating,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(kRadiusMd)),
+      backgroundColor: dark ? kDarkSurface2 : kLightSurface2,
+      contentTextStyle: GoogleFonts.inter(color: textPrimary, fontSize: 13),
     ),
   );
 }
+

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../constants.dart';
 import '../utils/url_utils.dart';
@@ -7,7 +8,7 @@ import '../widgets/app_ui.dart';
 
 final RegExp _emailPattern = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
 
-/// Screen 8 — Contact.
+/// Screen 8 — Refined Contact experience matching SNJ Devfolio 2.0.
 class ContactScreen extends StatefulWidget {
   const ContactScreen({super.key});
 
@@ -38,7 +39,7 @@ class _ContactScreenState extends State<ContactScreen> {
 
   void _copyEmail() {
     Clipboard.setData(const ClipboardData(text: kContactEmail));
-    _toast('Email copied: $kContactEmail');
+    _toast('Email address copied to clipboard: $kContactEmail');
   }
 
   Future<bool> _tryLaunch(Uri uri) async {
@@ -62,9 +63,9 @@ class _ContactScreenState extends State<ContactScreen> {
     final email = _emailCtrl.text.trim();
     final message = _msgCtrl.text.trim();
 
-    final subject = Uri.encodeComponent('Portfolio contact from $name');
+    final subject = Uri.encodeComponent('Project Inquiry from $name');
     final body = Uri.encodeComponent(
-      'Name: $name\nEmail: $email\n\n$message',
+      'Client / Collaborator: $name\nEmail: $email\n\n$message',
     );
     final ok = await _tryLaunch(
       Uri.parse('mailto:$kContactEmail?subject=$subject&body=$body'),
@@ -79,8 +80,8 @@ class _ContactScreenState extends State<ContactScreen> {
     setState(() => _sending = false);
     _toast(
       ok
-          ? 'Opening your email app…'
-          : 'No email app found. Message copied to clipboard instead.',
+          ? 'Opening default email application…'
+          : 'Email app not detected. Message details copied to clipboard.',
     );
   }
 
@@ -88,96 +89,149 @@ class _ContactScreenState extends State<ContactScreen> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    final options = Column(
+    final directChannels = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _ContactOptionCard(
+        _ChannelCard(
           icon: Icons.email_rounded,
-          title: 'Email me',
+          title: 'Email Me',
           subtitle: kContactEmail,
           onTap: _emailDirect,
           onLongPress: _copyEmail,
+          isDark: isDark,
         ),
-        const SizedBox(height: 10),
-        _ContactOptionCard(
+        const SizedBox(height: 12),
+        _ChannelCard(
           icon: Icons.work_rounded,
           title: 'LinkedIn',
-          subtitle: 'Connect with me',
+          subtitle: 'linkedin.com/in/sanjay-buhadiya',
           onTap: () => openLink(kLinkedinUrl),
+          isDark: isDark,
         ),
-        const SizedBox(height: 10),
-        _ContactOptionCard(
+        const SizedBox(height: 12),
+        _ChannelCard(
           icon: Icons.code_rounded,
           title: 'GitHub',
           subtitle: 'github.com/$kGithubUsername',
           onTap: () => openLink(kGithubUrl),
+          isDark: isDark,
         ),
-        const SizedBox(height: 10),
-        _ContactOptionCard(
+        const SizedBox(height: 12),
+        _ChannelCard(
           icon: Icons.alternate_email_rounded,
           title: 'X (Twitter)',
           subtitle: '@snj_142005',
           onTap: () => openLink(kXUrl),
+          isDark: isDark,
+        ),
+        const SizedBox(height: 18),
+
+        // Availability note
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: isDark ? kDarkSurface2 : kLightSurface2,
+            borderRadius: BorderRadius.circular(kRadiusMd),
+            border: Border.all(color: appBorderColor(isDark)),
+          ),
+          child: Row(
+            children: [
+              const PulsingDot(color: kEmeraldGreen, size: 8),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'Typically responds within 24 hours. Open to remote contracts & full-time roles.',
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    color: appTextSecondary(isDark),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ],
     );
 
-    final form = AppCard(
-      padding: const EdgeInsets.all(20),
-      radius: 22,
+    final messageForm = Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: isDark ? kDarkSurface : Colors.white,
+        borderRadius: BorderRadius.circular(kRadiusXl),
+        border: Border.all(color: appBorderColor(isDark)),
+        boxShadow: [
+          BoxShadow(
+            color: kAccentViolet.withValues(alpha: isDark ? 0.08 : 0.03),
+            blurRadius: 24,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
       child: Form(
         key: _formKey,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Send a message',
-              style: TextStyle(
-                fontSize: 16,
+              'Transmit a Message',
+              style: GoogleFonts.spaceGrotesk(
+                fontSize: 18,
                 fontWeight: FontWeight.w800,
                 color: appTextPrimary(isDark),
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 4),
+            Text(
+              'Fill out the form below to initiate communication directly.',
+              style: GoogleFonts.inter(
+                fontSize: 12,
+                color: appTextSecondary(isDark),
+              ),
+            ),
+            const SizedBox(height: 20),
             TextFormField(
               controller: _nameCtrl,
               textInputAction: TextInputAction.next,
               autofillHints: const [AutofillHints.name],
+              style: GoogleFonts.inter(fontSize: 14),
               decoration: const InputDecoration(
                 labelText: 'Your name',
-                prefixIcon: Icon(Icons.person_outline),
+                prefixIcon: Icon(Icons.person_outline, size: 20),
               ),
               validator: (v) =>
                   v == null || v.trim().isEmpty ? 'Enter your name' : null,
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 14),
             TextFormField(
               controller: _emailCtrl,
               keyboardType: TextInputType.emailAddress,
               textInputAction: TextInputAction.next,
               autofillHints: const [AutofillHints.email],
+              style: GoogleFonts.inter(fontSize: 14),
               decoration: const InputDecoration(
                 labelText: 'Your email',
-                prefixIcon: Icon(Icons.alternate_email),
+                prefixIcon: Icon(Icons.alternate_email, size: 20),
               ),
               validator: (v) => v != null && _emailPattern.hasMatch(v.trim())
                   ? null
-                  : 'Enter a valid email, like name@example.com',
+                  : 'Enter a valid email',
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 14),
             TextFormField(
               controller: _msgCtrl,
               maxLines: 4,
               maxLength: 1000,
+              style: GoogleFonts.inter(fontSize: 14),
               decoration: const InputDecoration(
                 labelText: 'Message',
                 alignLabelWithHint: true,
-                prefixIcon: Icon(Icons.chat_bubble_outline),
+                prefixIcon: Icon(Icons.chat_bubble_outline, size: 20),
               ),
               validator: (v) => v == null || v.trim().length < 5
-                  ? 'Write at least a short sentence'
+                  ? 'Write a short message'
                   : null,
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 16),
             SizedBox(
               width: double.infinity,
               height: 48,
@@ -192,8 +246,11 @@ class _ContactScreenState extends State<ContactScreen> {
                           color: Colors.white,
                         ),
                       )
-                    : const Icon(Icons.send_rounded, size: 18),
-                label: Text(_sending ? 'Opening email…' : 'Send via email app'),
+                    : const Icon(Icons.send_rounded, size: 16),
+                label: Text(
+                  _sending ? 'Opening Email Client…' : 'Open email to send',
+                  style: GoogleFonts.inter(fontWeight: FontWeight.w700),
+                ),
               ),
             ),
           ],
@@ -202,53 +259,95 @@ class _ContactScreenState extends State<ContactScreen> {
     );
 
     return ListView(
-      padding: const EdgeInsets.fromLTRB(20, 14, 20, 40),
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 48),
       children: [
-        ScreenTitle(
-          'Contact Me',
-          actions: [
+        // Title & Copy Action
+        Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '04 // DIRECT COMMUNICATION',
+                    style: GoogleFonts.jetBrainsMono(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: kAccentViolet,
+                      letterSpacing: 1.2,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Let\'s Connect!',
+                    style: GoogleFonts.spaceGrotesk(
+                      fontSize: 28,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -0.8,
+                      color: appTextPrimary(isDark),
+                    ),
+                  ),
+                ],
+              ),
+            ),
             IconButton(
-              tooltip: 'Copy email',
+              tooltip: 'Copy Email Address',
               icon: const Icon(Icons.copy_rounded, color: kAccentViolet),
               onPressed: _copyEmail,
             ),
           ],
         ),
-        const SizedBox(height: 20),
-        Text(
-          "Let's connect",
-          style: TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.w900,
-            color: appTextPrimary(isDark),
-          ),
-        ),
-        const SizedBox(height: 6),
-        Text(
-          'Have a project in mind or want to collaborate? Reach out on any channel below.',
-          style: TextStyle(
-            fontSize: 13,
-            color: appTextSecondary(isDark),
-            height: 1.45,
-          ),
-        ),
         const SizedBox(height: 24),
 
-        // Side by side on wide screens, stacked on phones.
+        // Large Editorial Introductory Statement
+        RichText(
+          text: TextSpan(
+            style: GoogleFonts.spaceGrotesk(
+              fontSize: 34,
+              fontWeight: FontWeight.w800,
+              letterSpacing: -1.0,
+              height: 1.15,
+              color: appTextPrimary(isDark),
+            ),
+            children: const [
+              TextSpan(text: 'Let\'s build something\n'),
+              TextSpan(
+                text: 'remarkable together.',
+                style: TextStyle(color: kAccentViolet),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+        Text(
+          'Have a product concept in mind, an opportunity, or looking for a specialized Flutter developer? Reach out through any channel below.',
+          style: GoogleFonts.inter(
+            fontSize: 14,
+            height: 1.55,
+            color: appTextSecondary(isDark),
+          ),
+        ),
+        const SizedBox(height: 32),
+
+        // Asymmetrical layout on wide screens
         LayoutBuilder(
           builder: (context, constraints) {
             if (constraints.maxWidth >= 760) {
               return Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(child: options),
-                  const SizedBox(width: 20),
-                  Expanded(child: form),
+                  Expanded(flex: 5, child: directChannels),
+                  const SizedBox(width: 24),
+                  Expanded(flex: 5, child: messageForm),
                 ],
               );
             }
             return Column(
-              children: [options, const SizedBox(height: 24), form],
+              children: [
+                directChannels,
+                const SizedBox(height: 24),
+                messageForm,
+              ],
             );
           },
         ),
@@ -257,13 +356,14 @@ class _ContactScreenState extends State<ContactScreen> {
   }
 }
 
-class _ContactOptionCard extends StatelessWidget {
-  const _ContactOptionCard({
+class _ChannelCard extends StatefulWidget {
+  const _ChannelCard({
     required this.icon,
     required this.title,
     required this.subtitle,
     required this.onTap,
     this.onLongPress,
+    required this.isDark,
   });
 
   final IconData icon;
@@ -271,57 +371,93 @@ class _ContactOptionCard extends StatelessWidget {
   final String subtitle;
   final VoidCallback onTap;
   final VoidCallback? onLongPress;
+  final bool isDark;
+
+  @override
+  State<_ChannelCard> createState() => _ChannelCardState();
+}
+
+class _ChannelCardState extends State<_ChannelCard> {
+  bool _hovered = false;
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return AppCard(
-      radius: 18,
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      onTap: onTap,
-      onLongPress: onLongPress,
-      child: Row(
-        children: [
-          Container(
-            width: 42,
-            height: 42,
-            decoration: BoxDecoration(
-              color: kPrimaryPurple.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(icon, color: kAccentViolet, size: 20),
+    return MouseRegion(
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        decoration: BoxDecoration(
+          color: widget.isDark ? kDarkSurface : Colors.white,
+          borderRadius: BorderRadius.circular(kRadiusMd),
+          border: Border.all(
+            color: _hovered
+                ? kAccentViolet.withValues(alpha: 0.6)
+                : appBorderColor(widget.isDark),
           ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    color: appTextPrimary(isDark),
+          boxShadow: [
+            if (_hovered)
+              BoxShadow(
+                color: kAccentViolet.withValues(alpha: widget.isDark ? 0.15 : 0.08),
+                blurRadius: 16,
+                offset: const Offset(0, 4),
+              ),
+          ],
+        ),
+        child: Material(
+          type: MaterialType.transparency,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(kRadiusMd),
+            onTap: widget.onTap,
+            onLongPress: widget.onLongPress,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              child: Row(
+                children: [
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: kAccentViolet.withValues(alpha: widget.isDark ? 0.16 : 0.1),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(widget.icon, color: kAccentViolet, size: 20),
                   ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  subtitle,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: appTextSecondary(isDark),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          widget.title,
+                          style: GoogleFonts.spaceGrotesk(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: appTextPrimary(widget.isDark),
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          widget.subtitle,
+                          overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.inter(
+                            fontSize: 12,
+                            color: appTextSecondary(widget.isDark),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                  Icon(
+                    Icons.arrow_outward_rounded,
+                    size: 16,
+                    color: _hovered ? kAccentViolet : appTextMuted(widget.isDark),
+                  ),
+                ],
+              ),
             ),
           ),
-          Icon(
-            Icons.arrow_outward_rounded,
-            size: 18,
-            color: appTextMuted(isDark),
-          ),
-        ],
+        ),
       ),
     );
   }

@@ -54,68 +54,88 @@ final List<String> kAllSkills = [
   for (final group in kSkillGroups.values) ...group,
 ];
 
-// ─── Color Palette (Reference Match) ──────────────────────────────────────────
+// ─── Color Palette (SNJ Devfolio 2.0 Specification) ───────────────────────────
 // Dark Theme Colors
-const Color kDarkBackground = Color(0xFF070B16);
-const Color kDarkSurface = Color(0xFF10172A);
-const Color kDarkSurface2 = Color(0xFF162036);
-const Color kDarkSurface3 = Color(0xFF1E293B);
+const Color kDarkBackground = Color(0xFF08090D);
+const Color kDarkSecondaryBackground = Color(0xFF101116);
+const Color kDarkSurface = Color(0xFF171920);
+const Color kDarkSurface2 = Color(0xFF1E212A);
+const Color kDarkSurface3 = Color(0xFF262935);
+const Color kDarkBorder = Color(0xFF292B34);
 
-// Neon Accent Colors
-const Color kPrimaryPurple = Color(0xFF7C3AED);
-const Color kAccentViolet = Color(0xFFA855F7);
-const Color kElectricBlue = Color(0xFF3B82F6);
-const Color kCyanAccent = Color(0xFF06B6D4);
+// Accent Colors (Selective & Premium)
+const Color kAccentBlue = Color(0xFF69A7FF);
+const Color kAccentViolet = Color(0xFF9877FF);
+const Color kElectricBlue = Color(0xFF69A7FF); // alias
+const Color kPrimaryPurple = Color(0xFF9877FF); // alias
+const Color kCyanAccent = Color(0xFF38BDF8);
 const Color kEmeraldGreen = Color(0xFF10B981);
 const Color kAmberBadge = Color(0xFFF59E0B);
 
-// Text Colors
-const Color kDarkTextPrimary = Color(0xFFF8FAFC);
-const Color kDarkTextSecondary = Color(0xFF94A3B8);
-const Color kDarkTextMuted = Color(0xFF64748B);
+// Dark Text Colors
+const Color kDarkTextPrimary = Color(0xFFF5F5F2);
+const Color kDarkTextSecondary = Color(0xFF999BA5);
+const Color kDarkTextMuted = Color(0xFF6A6D7C);
 
 // Light Theme Colors
-const Color kLightBackground = Color(0xFFF8FAFC);
+const Color kLightBackground = Color(0xFFFBFBFD);
+const Color kLightSecondaryBackground = Color(0xFFF2F4F7);
 const Color kLightSurface = Color(0xFFFFFFFF);
-const Color kLightSurface2 = Color(0xFFF1F5F9);
-const Color kLightSurface3 = Color(0xFFE2E8F0);
-const Color kLightTextPrimary = Color(0xFF0F172A);
-const Color kLightTextSecondary = Color(0xFF475569);
-const Color kLightBorder = Color(0xFFCBD5E1);
+const Color kLightSurface2 = Color(0xFFF5F7FA);
+const Color kLightSurface3 = Color(0xFFE5E7EB);
+const Color kLightBorder = Color(0xFFE2E4E9);
+const Color kLightTextPrimary = Color(0xFF0D0F14);
+const Color kLightTextSecondary = Color(0xFF64748B);
+const Color kLightTextMuted = Color(0xFF94A3B8);
 
 // Backward Compatibility Aliases
 const Color kInk = kDarkBackground;
 const Color kPanel = kDarkSurface;
 const Color kPanel2 = kDarkSurface2;
 const Color kAccent = kAccentViolet;
-const Color kAccentAlt = kPrimaryPurple;
+const Color kAccentAlt = kAccentBlue;
 const Color kMuted = kDarkTextSecondary;
 
 // ─── Gradients ────────────────────────────────────────────────────────────────
+const LinearGradient kVioletBlueGradient = LinearGradient(
+  colors: [kAccentViolet, kAccentBlue],
+  begin: Alignment.topLeft,
+  end: Alignment.bottomRight,
+);
+
 const LinearGradient kPurpleBlueGradient = LinearGradient(
-  colors: [kPrimaryPurple, kElectricBlue],
+  colors: [kAccentViolet, kAccentBlue],
   begin: Alignment.topLeft,
   end: Alignment.bottomRight,
 );
 
 const LinearGradient kVioletPurpleGradient = LinearGradient(
-  colors: [kAccentViolet, kPrimaryPurple],
+  colors: [kAccentViolet, Color(0xFF7C3AED)],
   begin: Alignment.topLeft,
   end: Alignment.bottomRight,
 );
 
 const LinearGradient kCardGradientDark = LinearGradient(
-  colors: [Color(0xFF131D35), Color(0xFF0C1322)],
+  colors: [Color(0xFF151720), Color(0xFF0E0F14)],
+  begin: Alignment.topLeft,
+  end: Alignment.bottomRight,
+);
+
+const LinearGradient kGlassSurfaceGradientDark = LinearGradient(
+  colors: [Color(0x331E212A), Color(0x1A101116)],
   begin: Alignment.topLeft,
   end: Alignment.bottomRight,
 );
 
 // ─── Radius Tokens ────────────────────────────────────────────────────────────
-const double kRadiusSm = 12;
+const double kRadiusXs = 6;
+const double kRadiusSm = 10;
 const double kRadiusMd = 16;
-const double kRadiusLg = 20;
+const double kRadiusLg = 22;
+const double kRadiusXl = 30;
 
 // ─── Responsive Breakpoints ───────────────────────────────────────────────────
-const double kTabletBreakpoint = 640;
-const double kDesktopBreakpoint = 1024;
-const double kContentMaxWidth = 1080;
+const double kTabletBreakpoint = 680;
+const double kDesktopBreakpoint = 1040;
+const double kContentMaxWidth = 1200;
+

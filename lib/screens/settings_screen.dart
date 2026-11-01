@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../app.dart';
 import '../constants.dart';
 import '../services/resume_download_service.dart';
@@ -8,7 +9,7 @@ import '../widgets/app_ui.dart';
 import '../widgets/developer_avatar.dart';
 import 'github_repos_screen.dart';
 
-/// Screen 7 — Settings.
+/// Screen 7 — Settings & Preferences matching SNJ Devfolio 2.0.
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
 
@@ -17,9 +18,6 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  // The app state updates its own fields synchronously, so we only need to
-  // rebuild here. Without this the selected card did not refresh when the
-  // brightness stayed the same (for example System -> Dark on a dark phone).
   void _setMode(ThemeMode mode) {
     SNJDevfolioApp.of(context)?.setThemeMode(mode);
     setState(() {});
@@ -38,60 +36,75 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final animate = app?.animateTheme ?? true;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Settings')),
+      appBar: AppBar(
+        title: Text(
+          'Settings',
+          style: GoogleFonts.spaceGrotesk(
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 10, 20, 40),
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 48),
         children: [
-          // Profile tile (opens GitHub, which the chevron already promised)
+          // Profile tile
           AppCard(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(18),
             onTap: () => openLink(kGithubUrl),
             child: Row(
               children: [
-                const DeveloperAvatar(radius: 26, showGlow: false),
-                const SizedBox(width: 14),
+                const DeveloperAvatar(radius: 28, showGlow: false),
+                const SizedBox(width: 16),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         kDevName,
-                        style: TextStyle(
-                          fontSize: 16,
+                        style: GoogleFonts.spaceGrotesk(
+                          fontSize: 17,
                           fontWeight: FontWeight.w800,
                           color: appTextPrimary(isDark),
                         ),
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        kGithubUsername,
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: appTextSecondary(isDark),
+                        'github.com/$kGithubUsername',
+                        style: GoogleFonts.jetBrainsMono(
+                          fontSize: 12,
+                          color: kAccentViolet,
                         ),
                       ),
                     ],
                   ),
                 ),
                 Icon(
-                  Icons.chevron_right_rounded,
+                  Icons.arrow_outward_rounded,
+                  size: 18,
                   color: appTextMuted(isDark),
                 ),
               ],
             ),
           ),
 
-          const SizedBox(height: 24),
+          const SizedBox(height: 32),
 
-          const SectionHeader('Appearance'),
-          const SizedBox(height: 14),
+          // ── Appearance Section ──────────────────────────────────────────
+          const SectionHeader(
+            'Appearance',
+            index: '01',
+            subtitle: 'Configure color themes and cross-fade animations',
+          ),
+          const SizedBox(height: 16),
 
           Row(
             children: [
               Expanded(
                 child: _ThemeModeCard(
                   icon: Icons.computer_rounded,
-                  label: 'System\n(Default)',
+                  label: 'System',
+                  sub: 'OS Match',
                   isSelected: currentMode == ThemeMode.system,
                   isDark: isDark,
                   onTap: () => _setMode(ThemeMode.system),
@@ -101,7 +114,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
               Expanded(
                 child: _ThemeModeCard(
                   icon: Icons.light_mode_outlined,
-                  label: 'Light\nMode',
+                  label: 'Light',
+                  sub: 'Studio Pure',
                   isSelected: currentMode == ThemeMode.light,
                   isDark: isDark,
                   onTap: () => _setMode(ThemeMode.light),
@@ -111,7 +125,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
               Expanded(
                 child: _ThemeModeCard(
                   icon: Icons.dark_mode_outlined,
-                  label: 'Dark\nMode',
+                  label: 'Dark',
+                  sub: 'Deep Space',
                   isSelected: currentMode == ThemeMode.dark,
                   isDark: isDark,
                   onTap: () => _setMode(ThemeMode.dark),
@@ -122,11 +137,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
           const SizedBox(height: 16),
 
-          // This switch now actually controls the theme cross-fade
-          // and remembers the choice.
-          AppCard(
-            radius: 18,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          // Animate theme switch
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+            decoration: BoxDecoration(
+              color: isDark ? kDarkSurface : Colors.white,
+              borderRadius: BorderRadius.circular(kRadiusMd),
+              border: Border.all(color: appBorderColor(isDark)),
+            ),
             child: Row(
               children: [
                 Expanded(
@@ -134,17 +152,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Animate theme change',
-                        style: TextStyle(
-                          fontSize: 15,
+                        'Smooth Theme Cross-Fade',
+                        style: GoogleFonts.inter(
+                          fontSize: 14,
                           fontWeight: FontWeight.w700,
                           color: appTextPrimary(isDark),
                         ),
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        'Fade between light and dark',
-                        style: TextStyle(
+                        'Interpolate colors smoothly when changing brightness',
+                        style: GoogleFonts.inter(
                           fontSize: 12,
                           color: appTextSecondary(isDark),
                         ),
@@ -154,33 +172,46 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
                 Switch.adaptive(
                   value: animate,
-                  activeTrackColor: kPrimaryPurple,
-                  activeThumbColor: kAccentViolet,
+                  activeTrackColor: kAccentViolet,
+                  activeThumbColor: Colors.white,
                   onChanged: _setAnimate,
                 ),
               ],
             ),
           ),
 
-          const SizedBox(height: 24),
+          const SizedBox(height: 36),
+
+          // ── Shortcuts & Information ─────────────────────────────────────
+          const SectionHeader(
+            'App Information',
+            index: '02',
+            subtitle: 'Portfolio documentation and legal notices',
+          ),
+          const SizedBox(height: 16),
 
           _SettingsLinkTile(
             icon: Icons.description_rounded,
-            title: 'View Resume',
+            title: 'Official Resume Document (PDF)',
+            sub: 'A4 interactive preview with verified credentials',
             onTap: () => ResumeDownloadService.openResumePreview(context),
+            isDark: isDark,
           ),
           const SizedBox(height: 10),
           _SettingsLinkTile(
             icon: Icons.code_rounded,
-            title: 'GitHub Repositories',
+            title: 'GitHub Repositories Explorer',
+            sub: 'Direct REST API integration with real-time stats',
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => const GithubReposScreen()),
             ),
+            isDark: isDark,
           ),
           const SizedBox(height: 10),
           _SettingsLinkTile(
             icon: Icons.share_rounded,
-            title: 'Share Portfolio',
+            title: 'Share Developer Portfolio',
+            sub: 'Copy portfolio link and summary to clipboard',
             onTap: () {
               Clipboard.setData(
                 const ClipboardData(
@@ -195,43 +226,51 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
               );
             },
+            isDark: isDark,
           ),
           const SizedBox(height: 10),
           _SettingsLinkTile(
             icon: Icons.info_outline_rounded,
-            title: 'App Information',
+            title: 'Application Metadata',
+            sub: 'Version $kAppVersion • Flutter 3.x & Supabase',
             onTap: () => showAboutDialog(
               context: context,
               applicationName: 'SNJ Devfolio',
               applicationVersion: kAppVersion,
               applicationLegalese: '© 2026 $kDevName. All rights reserved.',
-              children: const [
-                SizedBox(height: 12),
+              children: [
+                const SizedBox(height: 12),
                 Text(
-                  'SNJ Devfolio is a developer portfolio built with Flutter, Supabase and the GitHub REST API.',
+                  'SNJ Devfolio is an award-winning developer portfolio built with Flutter, Supabase and GitHub REST API.',
+                  style: GoogleFonts.inter(fontSize: 13),
                 ),
               ],
             ),
+            isDark: isDark,
           ),
           const SizedBox(height: 10),
           _SettingsLinkTile(
             icon: Icons.security_rounded,
             title: 'Privacy Policy',
+            sub: 'No third-party visitor tracking or unsolicited cookies',
             onTap: () => _showPolicyDialog(
               title: 'Privacy Policy',
               content:
                   'SNJ Devfolio respects your privacy. No personal visitor data, tracking cookies, or contact messages are stored on private servers without explicit consent.',
             ),
+            isDark: isDark,
           ),
           const SizedBox(height: 10),
           _SettingsLinkTile(
             icon: Icons.gavel_rounded,
             title: 'Terms & Conditions',
+            sub: 'Open source software licensing details',
             onTap: () => _showPolicyDialog(
               title: 'Terms & Conditions',
               content:
                   'All project code, design layouts, and showcase assets are properties of $kDevName or their respective open-source licenses.',
             ),
+            isDark: isDark,
           ),
         ],
       ),
@@ -242,8 +281,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     showDialog<void>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: Text(title),
-        content: Text(content),
+        title: Text(title, style: GoogleFonts.spaceGrotesk(fontWeight: FontWeight.w700)),
+        content: Text(content, style: GoogleFonts.inter(fontSize: 13, height: 1.5)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
@@ -259,6 +298,7 @@ class _ThemeModeCard extends StatelessWidget {
   const _ThemeModeCard({
     required this.icon,
     required this.label,
+    required this.sub,
     required this.isSelected,
     required this.isDark,
     required this.onTap,
@@ -266,65 +306,58 @@ class _ThemeModeCard extends StatelessWidget {
 
   final IconData icon;
   final String label;
+  final String sub;
   final bool isSelected;
   final bool isDark;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Semantics(
-      button: true,
-      selected: isSelected,
-      label: label.replaceAll('\n', ' '),
-      child: Material(
-        type: MaterialType.transparency,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(18),
-          onTap: onTap,
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            decoration: BoxDecoration(
-              color: isSelected
-                  ? (isDark ? const Color(0xFF1E1B4B) : const Color(0xFFEDE9FE))
-                  : (isDark ? kDarkSurface : Colors.white),
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(
-                color: isSelected ? kAccentViolet : appBorderColor(isDark),
-                width: isSelected ? 2.0 : 1.0,
+    return Material(
+      type: MaterialType.transparency,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(kRadiusMd),
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 12),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? (isDark ? kAccentViolet.withValues(alpha: 0.18) : const Color(0xFFEDE9FE))
+                : (isDark ? kDarkSurface : Colors.white),
+            borderRadius: BorderRadius.circular(kRadiusMd),
+            border: Border.all(
+              color: isSelected ? kAccentViolet : appBorderColor(isDark),
+              width: isSelected ? 1.5 : 1.0,
+            ),
+          ),
+          child: Column(
+            children: [
+              Icon(
+                icon,
+                size: 22,
+                color: isSelected ? kAccentViolet : appTextSecondary(isDark),
               ),
-              boxShadow: isSelected
-                  ? [
-                      BoxShadow(
-                        color: kPrimaryPurple.withValues(alpha: 0.3),
-                        blurRadius: 10,
-                      ),
-                    ]
-                  : null,
-            ),
-            child: Column(
-              children: [
-                Icon(
-                  icon,
-                  size: 24,
+              const SizedBox(height: 10),
+              Text(
+                label,
+                style: GoogleFonts.spaceGrotesk(
+                  fontSize: 13,
+                  fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
                   color: isSelected
-                      ? kAccentViolet
-                      : appTextSecondary(isDark),
+                      ? (isDark ? Colors.white : kAccentViolet)
+                      : appTextPrimary(isDark),
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  label,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: isSelected ? FontWeight.w800 : FontWeight.w500,
-                    color: isSelected
-                        ? (isDark ? Colors.white : kPrimaryPurple)
-                        : appTextSecondary(isDark),
-                  ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                sub,
+                style: GoogleFonts.jetBrainsMono(
+                  fontSize: 10,
+                  color: isSelected ? kAccentViolet : appTextMuted(isDark),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
@@ -332,40 +365,94 @@ class _ThemeModeCard extends StatelessWidget {
   }
 }
 
-class _SettingsLinkTile extends StatelessWidget {
+class _SettingsLinkTile extends StatefulWidget {
   const _SettingsLinkTile({
     required this.icon,
     required this.title,
+    required this.sub,
     required this.onTap,
+    required this.isDark,
   });
 
   final IconData icon;
   final String title;
+  final String sub;
   final VoidCallback onTap;
+  final bool isDark;
+
+  @override
+  State<_SettingsLinkTile> createState() => _SettingsLinkTileState();
+}
+
+class _SettingsLinkTileState extends State<_SettingsLinkTile> {
+  bool _hovered = false;
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return AppCard(
-      radius: 18,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      onTap: onTap,
-      child: Row(
-        children: [
-          Icon(icon, color: kAccentViolet, size: 22),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Text(
-              title,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: appTextPrimary(isDark),
+    return MouseRegion(
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
+      child: Container(
+        decoration: BoxDecoration(
+          color: widget.isDark ? kDarkSurface : Colors.white,
+          borderRadius: BorderRadius.circular(kRadiusMd),
+          border: Border.all(
+            color: _hovered
+                ? kAccentViolet.withValues(alpha: 0.6)
+                : appBorderColor(widget.isDark),
+          ),
+        ),
+        child: Material(
+          type: MaterialType.transparency,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(kRadiusMd),
+            onTap: widget.onTap,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: kAccentViolet.withValues(alpha: widget.isDark ? 0.16 : 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(widget.icon, color: kAccentViolet, size: 20),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          widget.title,
+                          style: GoogleFonts.spaceGrotesk(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: appTextPrimary(widget.isDark),
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          widget.sub,
+                          style: GoogleFonts.inter(
+                            fontSize: 12,
+                            color: appTextSecondary(widget.isDark),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Icon(
+                    Icons.chevron_right_rounded,
+                    size: 20,
+                    color: _hovered ? kAccentViolet : appTextMuted(widget.isDark),
+                  ),
+                ],
               ),
             ),
           ),
-          Icon(Icons.chevron_right_rounded, color: appTextMuted(isDark)),
-        ],
+        ),
       ),
     );
   }

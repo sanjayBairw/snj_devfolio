@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../constants.dart';
 import '../../models/project.dart';
 import '../../services/supabase_service.dart';
+import '../../widgets/app_ui.dart';
 import 'project_form_screen.dart';
 
-/// Screen 6 — Admin Panel matching the reference screenshot.
+/// Screen 6 — Admin Console matching SNJ Devfolio 2.0 specifications.
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
 
@@ -16,7 +18,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   List<Project> _projects = [];
   bool _loading = true;
   String? _error;
-  bool _showProjectList = false;
+  bool _showProjectList = true;
 
   @override
   void initState() {
@@ -79,7 +81,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           content: Text(
             updated.isPublished
                 ? 'Project published publicly.'
-                : 'Project unpublished (draft).',
+                : 'Project unpublished (saved as draft).',
           ),
         ),
       );
@@ -92,9 +94,14 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Delete project?'),
+        title: Text(
+          'Delete project?',
+          style: GoogleFonts.spaceGrotesk(fontWeight: FontWeight.w700),
+        ),
         content: Text(
-            'This will permanently delete "${p.title}". This cannot be undone.'),
+          'This will permanently delete "${p.title}" from Supabase database. This action cannot be undone.',
+          style: GoogleFonts.inter(fontSize: 13, height: 1.5),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -114,7 +121,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       setState(() => _projects.removeAt(index));
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('"${p.title}" deleted.')),
+        SnackBar(content: Text('"${p.title}" permanently deleted.')),
       );
     } catch (e) {
       _showError('Failed to delete: $e');
@@ -137,14 +144,21 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final publishedCount = _projects.where((p) => p.isPublished).length;
+    final draftCount = _projects.length - publishedCount;
 
     return Scaffold(
       appBar: AppBar(
-        leading: const Icon(Icons.shield_outlined, color: kAccentViolet),
-        title: const Text('Admin Panel'),
+        title: Text(
+          'Admin Console',
+          style: GoogleFonts.spaceGrotesk(
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
         actions: [
           IconButton(
-            tooltip: 'Sign out',
+            tooltip: 'Sign Out',
             icon: const Icon(Icons.logout_rounded),
             onPressed: _signOut,
           ),
@@ -154,7 +168,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       body: _loading
           ? const Center(child: CircularProgressIndicator(color: kAccentViolet))
           : ListView(
-              padding: const EdgeInsets.fromLTRB(20, 10, 20, 40),
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 48),
               children: [
                 if (_error != null) ...[
                   Container(
@@ -162,294 +176,337 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
                       color: Colors.red.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: BorderRadius.circular(kRadiusMd),
                       border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
                     ),
                     child: Row(
                       children: [
                         const Icon(Icons.cloud_off_rounded, color: Colors.redAccent, size: 20),
-                        const SizedBox(width: 10),
+                        const SizedBox(width: 12),
                         Expanded(
                           child: Text(
-                            'Supabase connection note: $_error',
-                            style: const TextStyle(fontSize: 12, color: Colors.redAccent),
+                            'Database Notice: $_error',
+                            style: GoogleFonts.inter(fontSize: 12, color: Colors.redAccent),
                           ),
                         ),
                         TextButton(
                           onPressed: _load,
-                          child: const Text('Retry'),
+                          child: const Text('RETRY'),
                         ),
                       ],
                     ),
                   ),
                 ],
 
-                // ── Hero Secure Card (Screen 6 Reference) ─────────────────
+                // ── Security & Status Banner ──────────────────────────────
                 Container(
                   padding: const EdgeInsets.all(22),
                   decoration: BoxDecoration(
                     color: isDark ? kDarkSurface : Colors.white,
-                    borderRadius: BorderRadius.circular(22),
-                    border: Border.all(
-                      color: isDark
-                          ? Colors.white.withValues(alpha: 0.08)
-                          : kLightBorder,
-                    ),
-                    gradient: isDark
-                        ? const LinearGradient(
-                            colors: [Color(0xFF1E1B4B), Color(0xFF0F172A)],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          )
-                        : null,
+                    borderRadius: BorderRadius.circular(kRadiusXl),
+                    border: Border.all(color: appBorderColor(isDark)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: kAccentViolet.withValues(alpha: isDark ? 0.08 : 0.03),
+                        blurRadius: 20,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
                   ),
-                  child: Column(
+                  child: Row(
                     children: [
                       Container(
                         width: 48,
                         height: 48,
                         decoration: BoxDecoration(
-                          color: kPrimaryPurple.withValues(alpha: 0.25),
-                          shape: BoxShape.circle,
+                          color: kAccentViolet.withValues(alpha: isDark ? 0.16 : 0.1),
+                          borderRadius: BorderRadius.circular(14),
                         ),
-                        child: const Icon(
-                          Icons.lock_rounded,
-                          color: kAccentViolet,
-                          size: 24,
-                        ),
+                        child: const Icon(Icons.lock_rounded, color: kAccentViolet, size: 24),
                       ),
-                      const SizedBox(height: 12),
-                      Text(
-                        'Secure Access Only',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w800,
-                          color: isDark ? Colors.white : kLightTextPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Manage your projects remotely',
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: isDark ? kDarkTextSecondary : kLightTextSecondary,
-                        ),
-                      ),
-                      const SizedBox(height: 18),
-
-                      // View All Projects Button
-                      SizedBox(
-                        width: double.infinity,
-                        child: FilledButton.icon(
-                          onPressed: () {
-                            setState(() => _showProjectList = !_showProjectList);
-                          },
-                          icon: Icon(
-                            _showProjectList
-                                ? Icons.visibility_off_outlined
-                                : Icons.visibility_outlined,
-                            size: 18,
-                          ),
-                          label: Text(
-                            _showProjectList
-                                ? 'Hide Projects List'
-                                : 'View All Projects (${_projects.length}) →',
-                          ),
-                          style: FilledButton.styleFrom(
-                            backgroundColor: kPrimaryPurple,
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                          ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Text(
+                                  'Authenticated Session',
+                                  style: GoogleFonts.spaceGrotesk(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w700,
+                                    color: appTextPrimary(isDark),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: kEmeraldGreen.withValues(alpha: 0.15),
+                                    borderRadius: BorderRadius.circular(kRadiusXs),
+                                  ),
+                                  child: Text(
+                                    'RLS ACTIVE',
+                                    style: GoogleFonts.jetBrainsMono(
+                                      color: kEmeraldGreen,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 3),
+                            Text(
+                              'Connected to Supabase project • Admin ID: ${kAdminUserId.substring(0, 8)}...',
+                              style: GoogleFonts.jetBrainsMono(
+                                fontSize: 11,
+                                color: appTextMuted(isDark),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],
                   ),
-                ),
-
-                const SizedBox(height: 28),
-
-                // ── Quick Actions Grid (Screen 6 Reference) ───────────────
-                Text(
-                  'Quick Actions',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w800,
-                    color: isDark ? Colors.white : kLightTextPrimary,
-                  ),
-                ),
-                const SizedBox(height: 14),
-
-                GridView.count(
-                  crossAxisCount: 2,
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  crossAxisSpacing: 12,
-                  mainAxisSpacing: 12,
-                  childAspectRatio: 1.4,
-                  children: [
-                    _ActionCard(
-                      icon: Icons.add_rounded,
-                      title: 'Add Project',
-                      isDark: isDark,
-                      onTap: _addProject,
-                    ),
-                    _ActionCard(
-                      icon: Icons.edit_note_rounded,
-                      title: 'Edit Projects',
-                      isDark: isDark,
-                      onTap: () {
-                        setState(() => _showProjectList = true);
-                      },
-                    ),
-                    _ActionCard(
-                      icon: Icons.format_list_bulleted_rounded,
-                      title: 'Manage Content',
-                      isDark: isDark,
-                      onTap: () {
-                        setState(() => _showProjectList = true);
-                      },
-                    ),
-
-                    _ActionCard(
-                      icon: Icons.bar_chart_rounded,
-                      title: 'View Analytics',
-                      isDark: isDark,
-                      onTap: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              'Total remote projects: ${_projects.length} • Supabase RLS Active',
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ],
                 ),
 
                 const SizedBox(height: 24),
 
-                // ── Admin Status Card (Screen 6 Reference) ────────────────
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: isDark ? kDarkSurface : Colors.white,
-                    borderRadius: BorderRadius.circular(18),
-                    border: Border.all(
-                      color: isDark
-                          ? Colors.white.withValues(alpha: 0.08)
-                          : kLightBorder,
+                // ── KPI Summary Tiles ─────────────────────────────────────
+                Row(
+                  children: [
+                    Expanded(
+                      child: _AdminKpiTile(
+                        label: 'TOTAL PROJECTS',
+                        value: '${_projects.length}',
+                        color: kAccentViolet,
+                        isDark: isDark,
+                      ),
                     ),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Admin Status',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: isDark ? kDarkTextSecondary : kLightTextSecondary,
-                        ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: _AdminKpiTile(
+                        label: 'PUBLISHED (LIVE)',
+                        value: '$publishedCount',
+                        color: kEmeraldGreen,
+                        isDark: isDark,
                       ),
-                      const SizedBox(height: 6),
-                      Row(
-                        children: [
-                          Container(
-                            width: 8,
-                            height: 8,
-                            decoration: const BoxDecoration(
-                              color: kEmeraldGreen,
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          const Text(
-                            'Authenticated',
-                            style: TextStyle(
-                              color: kEmeraldGreen,
-                              fontWeight: FontWeight.w800,
-                              fontSize: 14,
-                            ),
-                          ),
-                        ],
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: _AdminKpiTile(
+                        label: 'DRAFT QUEUE',
+                        value: '$draftCount',
+                        color: Colors.amber,
+                        isDark: isDark,
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Signed in as admin (${kAdminUserId.substring(0, 8)}...)',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: isDark ? kDarkTextMuted : Colors.grey,
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
 
-                // ── Detailed Project List Section ─────────────────────────
-                if (_showProjectList) ...[
-                  const SizedBox(height: 28),
-                  Text(
-                    'Projects (${_projects.length})',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w800,
-                      color: isDark ? Colors.white : kLightTextPrimary,
+                const SizedBox(height: 28),
+
+                // ── Quick Actions ─────────────────────────────────────────
+                const SectionHeader(
+                  'Quick Management Actions',
+                  index: '01',
+                  subtitle: 'Create, organize and publish remote project records',
+                ),
+                const SizedBox(height: 14),
+
+                Row(
+                  children: [
+                    Expanded(
+                      child: GradientButton(
+                        label: 'Create Project',
+                        icon: Icons.add_rounded,
+                        onPressed: _addProject,
+                      ),
                     ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () {
+                          setState(() => _showProjectList = !_showProjectList);
+                        },
+                        icon: Icon(
+                          _showProjectList ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                          size: 16,
+                        ),
+                        label: Text(
+                          _showProjectList ? 'Hide List' : 'Show List (${_projects.length})',
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 32),
+
+                // ── High-Density Project Management List ──────────────────
+                if (_showProjectList) ...[
+                  SectionHeader(
+                    'Repository Records (${_projects.length})',
+                    index: '02',
+                    subtitle: 'Toggle visibility, edit specifications or remove entries',
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 14),
+
                   if (_projects.isEmpty)
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 20),
+                    Container(
+                      padding: const EdgeInsets.all(32),
+                      decoration: BoxDecoration(
+                        color: isDark ? kDarkSurface : Colors.white,
+                        borderRadius: BorderRadius.circular(kRadiusLg),
+                        border: Border.all(color: appBorderColor(isDark)),
+                      ),
                       child: Center(
-                        child: Text('No projects yet. Tap Add Project above.'),
+                        child: Column(
+                          children: [
+                            Icon(Icons.inbox_rounded, size: 36, color: appTextMuted(isDark)),
+                            const SizedBox(height: 12),
+                            Text(
+                              'No project records currently found in database.',
+                              style: GoogleFonts.inter(
+                                fontSize: 13,
+                                color: appTextSecondary(isDark),
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            OutlinedButton(
+                              onPressed: _addProject,
+                              child: const Text('Add First Project'),
+                            ),
+                          ],
+                        ),
                       ),
                     )
                   else
                     ...List.generate(_projects.length, (i) {
                       final p = _projects[i];
-                      return Card(
-                        margin: const EdgeInsets.only(bottom: 10),
-                        child: ListTile(
-                          title: Text(
-                            p.title,
-                            style: const TextStyle(fontWeight: FontWeight.w700),
-                          ),
-                          subtitle: Text(
-                            p.techStack.isNotEmpty ? p.techStack : p.description,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              IconButton(
-                                visualDensity: VisualDensity.compact,
-                                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                                padding: EdgeInsets.zero,
-                                icon: Icon(
-                                  p.isPublished
-                                      ? Icons.visibility_outlined
-                                      : Icons.visibility_off_outlined,
-                                  size: 19,
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 12),
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: isDark ? kDarkSurface : Colors.white,
+                          borderRadius: BorderRadius.circular(kRadiusMd),
+                          border: Border.all(color: appBorderColor(isDark)),
+                        ),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                color: isDark ? kDarkSurface2 : kLightSurface2,
+                                borderRadius: BorderRadius.circular(kRadiusSm),
+                              ),
+                              child: Text(
+                                (i + 1).toString().padLeft(2, '0'),
+                                style: GoogleFonts.jetBrainsMono(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                  color: kAccentViolet,
                                 ),
-                                onPressed: () => _togglePublish(p, i),
                               ),
-                              IconButton(
-                                visualDensity: VisualDensity.compact,
-                                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                                padding: EdgeInsets.zero,
-                                icon: const Icon(Icons.edit_outlined, size: 19),
-                                onPressed: () => _editProject(p, i),
+                            ),
+                            const SizedBox(width: 14),
+
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          p.title,
+                                          style: GoogleFonts.spaceGrotesk(
+                                            fontSize: 15,
+                                            fontWeight: FontWeight.w700,
+                                            color: appTextPrimary(isDark),
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                        decoration: BoxDecoration(
+                                          color: p.isPublished
+                                              ? kEmeraldGreen.withValues(alpha: 0.15)
+                                              : Colors.orange.withValues(alpha: 0.15),
+                                          borderRadius: BorderRadius.circular(kRadiusXs),
+                                        ),
+                                        child: Text(
+                                          p.isPublished ? 'LIVE' : 'DRAFT',
+                                          style: GoogleFonts.jetBrainsMono(
+                                            color: p.isPublished ? kEmeraldGreen : Colors.orange,
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 3),
+                                  Text(
+                                    p.techStack.isNotEmpty ? p.techStack : p.description,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: GoogleFonts.inter(
+                                      fontSize: 12,
+                                      color: appTextSecondary(isDark),
+                                    ),
+                                  ),
+                                ],
                               ),
-                              IconButton(
-                                visualDensity: VisualDensity.compact,
-                                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                                padding: EdgeInsets.zero,
-                                icon: const Icon(Icons.delete_outline,
-                                    size: 19, color: Colors.redAccent),
-                                onPressed: () => _deleteProject(p, i),
-                              ),
-                            ],
-                          ),
+                            ),
+                            const SizedBox(width: 12),
+
+                            // Actions
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                IconButton(
+                                  tooltip: p.isPublished ? 'Unpublish' : 'Publish',
+                                  visualDensity: VisualDensity.compact,
+                                  constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                                  padding: EdgeInsets.zero,
+                                  icon: Icon(
+                                    p.isPublished
+                                        ? Icons.visibility_outlined
+                                        : Icons.visibility_off_outlined,
+                                    size: 18,
+                                    color: p.isPublished ? kEmeraldGreen : Colors.orange,
+                                  ),
+                                  onPressed: () => _togglePublish(p, i),
+                                ),
+                                IconButton(
+                                  tooltip: 'Edit Project',
+                                  visualDensity: VisualDensity.compact,
+                                  constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                                  padding: EdgeInsets.zero,
+                                  icon: const Icon(Icons.edit_outlined, size: 18),
+                                  onPressed: () => _editProject(p, i),
+                                ),
+                                IconButton(
+                                  tooltip: 'Delete Project',
+                                  visualDensity: VisualDensity.compact,
+                                  constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                                  padding: EdgeInsets.zero,
+                                  icon: const Icon(Icons.delete_outline,
+                                      size: 18, color: Colors.redAccent),
+                                  onPressed: () => _deleteProject(p, i),
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
                       );
                     }),
@@ -460,59 +517,50 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   }
 }
 
-class _ActionCard extends StatelessWidget {
-  const _ActionCard({
-    required this.icon,
-    required this.title,
+class _AdminKpiTile extends StatelessWidget {
+  const _AdminKpiTile({
+    required this.label,
+    required this.value,
+    required this.color,
     required this.isDark,
-    required this.onTap,
   });
 
-  final IconData icon;
-  final String title;
+  final String label;
+  final String value;
+  final Color color;
   final bool isDark;
-  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     return Container(
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: isDark ? kDarkSurface : Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: isDark
-              ? Colors.white.withValues(alpha: 0.08)
-              : kLightBorder,
-        ),
+        borderRadius: BorderRadius.circular(kRadiusMd),
+        border: Border.all(color: appBorderColor(isDark)),
       ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(18),
-          onTap: onTap,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: kPrimaryPurple.withValues(alpha: 0.2),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(icon, color: kAccentViolet, size: 22),
-              ),
-              const SizedBox(height: 10),
-              Text(
-                title,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                  color: isDark ? Colors.white : kLightTextPrimary,
-                ),
-              ),
-            ],
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: GoogleFonts.jetBrainsMono(
+              fontSize: 9,
+              fontWeight: FontWeight.w700,
+              color: appTextMuted(isDark),
+              letterSpacing: 0.6,
+            ),
           ),
-        ),
+          const SizedBox(height: 6),
+          Text(
+            value,
+            style: GoogleFonts.spaceGrotesk(
+              fontSize: 24,
+              fontWeight: FontWeight.w800,
+              color: color,
+            ),
+          ),
+        ],
       ),
     );
   }

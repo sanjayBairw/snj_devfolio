@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../constants.dart';
 import '../models/github_repo.dart';
 import '../services/github_service.dart';
 import '../utils/url_utils.dart';
+import '../widgets/app_ui.dart';
 
-/// Screen 4 — GitHub Repositories matching the reference screenshot.
+/// Screen 4 — GitHub Repositories & Open Source Showcase matching SNJ Devfolio 2.0.
 class GithubReposScreen extends StatefulWidget {
   const GithubReposScreen({super.key});
 
@@ -77,10 +79,16 @@ class _GithubReposScreenState extends State<GithubReposScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('GitHub Repositories'),
+        title: Text(
+          'GitHub Repositories',
+          style: GoogleFonts.spaceGrotesk(
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
         actions: [
           IconButton(
-            tooltip: 'Refresh',
+            tooltip: 'Refresh Repositories',
             icon: const Icon(Icons.refresh_rounded),
             onPressed: () => _loadData(forceRefresh: true),
           ),
@@ -93,38 +101,37 @@ class _GithubReposScreenState extends State<GithubReposScreen> {
               onRefresh: () => _loadData(forceRefresh: true),
               color: kAccentViolet,
               child: ListView(
-                padding: const EdgeInsets.fromLTRB(20, 10, 20, 40),
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 48),
                 children: [
-                  // ── Profile Overview Card (Screen 4 Reference) ────────────
+                  // ── Profile Overview Hero Card ────────────────────────────
                   Container(
-                    padding: const EdgeInsets.all(20),
+                    padding: const EdgeInsets.all(24),
                     decoration: BoxDecoration(
                       color: isDark ? kDarkSurface : Colors.white,
-                      borderRadius: BorderRadius.circular(22),
-                      border: Border.all(
-                        color: isDark
-                            ? Colors.white.withValues(alpha: 0.08)
-                            : kLightBorder,
-                      ),
-                      gradient: isDark
-                          ? const LinearGradient(
-                              colors: [Color(0xFF131D35), Color(0xFF0F172A)],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            )
-                          : null,
+                      borderRadius: BorderRadius.circular(kRadiusXl),
+                      border: Border.all(color: appBorderColor(isDark)),
+                      boxShadow: [
+                        BoxShadow(
+                          color: kAccentViolet.withValues(alpha: isDark ? 0.08 : 0.03),
+                          blurRadius: 24,
+                          offset: const Offset(0, 6),
+                        ),
+                      ],
                     ),
                     child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Avatar + Name + Handle
                         Row(
                           children: [
                             Container(
-                              width: 56,
-                              height: 56,
-                              decoration: const BoxDecoration(
+                              width: 58,
+                              height: 58,
+                              decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: Color(0xFF1E293B),
+                                border: Border.all(
+                                  color: kAccentViolet.withValues(alpha: 0.5),
+                                  width: 1.5,
+                                ),
                               ),
                               child: ClipOval(
                                 child: Image.network(
@@ -138,25 +145,25 @@ class _GithubReposScreenState extends State<GithubReposScreen> {
                                 ),
                               ),
                             ),
-                            const SizedBox(width: 14),
+                            const SizedBox(width: 16),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
                                     _user?.login ?? kGithubUsername,
-                                    style: TextStyle(
-                                      fontSize: 18,
+                                    style: GoogleFonts.spaceGrotesk(
+                                      fontSize: 20,
                                       fontWeight: FontWeight.w800,
-                                      color: isDark ? Colors.white : kLightTextPrimary,
+                                      color: appTextPrimary(isDark),
                                     ),
                                   ),
                                   const SizedBox(height: 2),
                                   Text(
-                                    '@${_user?.login ?? kGithubUsername}',
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      color: isDark ? kDarkTextSecondary : kLightTextSecondary,
+                                    'github.com/${_user?.login ?? kGithubUsername}',
+                                    style: GoogleFonts.jetBrainsMono(
+                                      fontSize: 12,
+                                      color: kAccentViolet,
                                     ),
                                   ),
                                 ],
@@ -164,59 +171,78 @@ class _GithubReposScreenState extends State<GithubReposScreen> {
                             ),
                           ],
                         ),
-                        const SizedBox(height: 14),
+                        const SizedBox(height: 16),
 
-                        // Bio
-                        Align(
-                          alignment: Alignment.centerLeft,
-                          child: Text(
-                            _user?.bio ?? 'Open source contributor & developer',
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: isDark ? kDarkTextSecondary : kLightTextSecondary,
-                            ),
+                        Text(
+                          _user?.bio ?? 'Open source developer & mobile engineer',
+                          style: GoogleFonts.inter(
+                            fontSize: 13,
+                            color: appTextSecondary(isDark),
+                            height: 1.5,
                           ),
                         ),
-                        const SizedBox(height: 18),
+                        const SizedBox(height: 20),
 
-                        // Stats Row
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceAround,
-                          children: [
-                            _UserMetric(
-                              value: '${_user?.publicRepos ?? 15}',
-                              label: 'Repos',
-                              isDark: isDark,
-                            ),
-                            _UserMetric(
-                              value: '${_user?.followers ?? 250}',
-                              label: 'Followers',
-                              isDark: isDark,
-                            ),
-                            _UserMetric(
-                              value: '${_user?.following ?? 80}',
-                              label: 'Following',
-                              isDark: isDark,
-                            ),
-                          ],
+                        // Stats Grid in JetBrains Mono & Space Grotesk
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 14),
+                          decoration: BoxDecoration(
+                            color: isDark ? kDarkSurface2 : kLightSurface2,
+                            borderRadius: BorderRadius.circular(kRadiusMd),
+                            border: Border.all(color: appBorderColor(isDark)),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceAround,
+                            children: [
+                              _GithubMetric(
+                                value: '${_user?.publicRepos ?? 15}',
+                                label: 'REPOSITORIES',
+                                isDark: isDark,
+                              ),
+                              Container(
+                                height: 28,
+                                width: 1,
+                                color: appBorderColor(isDark),
+                              ),
+                              _GithubMetric(
+                                value: '${_user?.followers ?? 250}',
+                                label: 'FOLLOWERS',
+                                isDark: isDark,
+                              ),
+                              Container(
+                                height: 28,
+                                width: 1,
+                                color: appBorderColor(isDark),
+                              ),
+                              _GithubMetric(
+                                value: '${_user?.following ?? 80}',
+                                label: 'FOLLOWING',
+                                isDark: isDark,
+                              ),
+                            ],
+                          ),
                         ),
                       ],
                     ),
                   ),
 
-                  const SizedBox(height: 18),
+                  const SizedBox(height: 24),
 
-                  // ── Search & Filter Input ─────────────────────────────────
+                  // ── Search & Filter Controls ──────────────────────────────
                   Row(
                     children: [
                       Expanded(
                         child: TextField(
                           controller: _searchCtrl,
+                          style: GoogleFonts.inter(fontSize: 14),
                           decoration: InputDecoration(
-                            hintText: 'Search repositories...',
+                            hintText: 'Search repositories or topics...',
                             prefixIcon: const Icon(Icons.search_rounded, size: 20),
                             contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 12),
+                              horizontal: 16,
+                              vertical: 12,
+                            ),
                             suffixIcon: _searchCtrl.text.isNotEmpty
                                 ? IconButton(
                                     icon: const Icon(Icons.clear_rounded, size: 18),
@@ -240,26 +266,25 @@ class _GithubReposScreenState extends State<GithubReposScreen> {
                       ),
                       const SizedBox(width: 10),
 
-                      // Language Filter Menu
+                      // Language Menu
                       Container(
                         decoration: BoxDecoration(
                           color: isDark ? kDarkSurface2 : kLightSurface2,
-                          borderRadius: BorderRadius.circular(14),
+                          borderRadius: BorderRadius.circular(kRadiusSm),
                           border: Border.all(
                             color: _selectedLanguage != null
                                 ? kAccentViolet
-                                : (isDark
-                                    ? Colors.white.withValues(alpha: 0.08)
-                                    : kLightBorder),
+                                : appBorderColor(isDark),
                           ),
                         ),
                         child: PopupMenuButton<String?>(
                           tooltip: 'Filter by Language',
                           icon: Icon(
                             Icons.tune_rounded,
+                            size: 20,
                             color: _selectedLanguage != null
                                 ? kAccentViolet
-                                : (isDark ? Colors.white : kLightTextPrimary),
+                                : appTextPrimary(isDark),
                           ),
                           onSelected: (lang) {
                             setState(() {
@@ -284,36 +309,70 @@ class _GithubReposScreenState extends State<GithubReposScreen> {
                               value: 'JavaScript',
                               child: Text('JavaScript'),
                             ),
+                            const PopupMenuItem(
+                              value: 'HTML',
+                              child: Text('HTML'),
+                            ),
                           ],
                         ),
                       ),
                     ],
                   ),
 
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 20),
 
-                  // ── Repositories List ─────────────────────────────────────
-                  if (_filteredRepos.isEmpty) ...[
-                    const SizedBox(height: 40),
-                    Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.search_off_rounded,
-                            size: 48,
-                            color: isDark ? kDarkTextMuted : Colors.grey,
-                          ),
-                          const SizedBox(height: 12),
-                          Text(
-                            'No repositories found',
-                            style: TextStyle(
+                  // Metadata counter in JetBrains Mono
+                  Row(
+                    children: [
+                      Text(
+                        'OPEN SOURCE ARCHIVE // ${_filteredRepos.length} REPOSITORIES',
+                        style: GoogleFonts.jetBrainsMono(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: appTextMuted(isDark),
+                          letterSpacing: 0.8,
+                        ),
+                      ),
+                      const Spacer(),
+                      if (_selectedLanguage != null || _searchQuery.isNotEmpty)
+                        InkWell(
+                          onTap: () {
+                            setState(() {
+                              _selectedLanguage = null;
+                              _searchQuery = '';
+                              _searchCtrl.clear();
+                              _applyFilter();
+                            });
+                          },
+                          child: Text(
+                            'RESET',
+                            style: GoogleFonts.jetBrainsMono(
+                              fontSize: 10,
                               fontWeight: FontWeight.w700,
-                              color: isDark ? Colors.white : kLightTextPrimary,
+                              color: kAccentViolet,
                             ),
                           ),
-                        ],
-                      ),
+                        ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 14),
+
+                  // Repositories List
+                  if (_filteredRepos.isEmpty) ...[
+                    EmptyState(
+                      icon: Icons.search_off_rounded,
+                      title: 'No repositories found',
+                      message: 'Try adjusting your search query or language filter.',
+                      actionLabel: 'Reset Filters',
+                      onAction: () {
+                        setState(() {
+                          _selectedLanguage = null;
+                          _searchQuery = '';
+                          _searchCtrl.clear();
+                          _applyFilter();
+                        });
+                      },
                     ),
                   ] else ...[
                     ..._filteredRepos.map(
@@ -330,8 +389,8 @@ class _GithubReposScreenState extends State<GithubReposScreen> {
   }
 }
 
-class _UserMetric extends StatelessWidget {
-  const _UserMetric({
+class _GithubMetric extends StatelessWidget {
+  const _GithubMetric({
     required this.value,
     required this.label,
     required this.isDark,
@@ -347,18 +406,20 @@ class _UserMetric extends StatelessWidget {
       children: [
         Text(
           value,
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w900,
-            color: isDark ? Colors.white : kLightTextPrimary,
+          style: GoogleFonts.spaceGrotesk(
+            fontSize: 20,
+            fontWeight: FontWeight.w800,
+            color: appTextPrimary(isDark),
           ),
         ),
-        const SizedBox(height: 3),
+        const SizedBox(height: 2),
         Text(
           label,
-          style: TextStyle(
-            fontSize: 12,
-            color: isDark ? kDarkTextSecondary : kLightTextSecondary,
+          style: GoogleFonts.jetBrainsMono(
+            fontSize: 9,
+            fontWeight: FontWeight.w600,
+            color: appTextMuted(isDark),
+            letterSpacing: 0.8,
           ),
         ),
       ],
@@ -366,88 +427,101 @@ class _UserMetric extends StatelessWidget {
   }
 }
 
-class _RepoCard extends StatelessWidget {
+class _RepoCard extends StatefulWidget {
   const _RepoCard({required this.repo, required this.isDark});
   final GithubRepo repo;
   final bool isDark;
 
   @override
+  State<_RepoCard> createState() => _RepoCardState();
+}
+
+class _RepoCardState extends State<_RepoCard> {
+  bool _hovered = false;
+
+  @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: isDark ? kDarkSurface : Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: isDark
-              ? Colors.white.withValues(alpha: 0.08)
-              : kLightBorder,
+    final repo = widget.repo;
+
+    return MouseRegion(
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        decoration: BoxDecoration(
+          color: widget.isDark ? kDarkSurface : Colors.white,
+          borderRadius: BorderRadius.circular(kRadiusMd),
+          border: Border.all(
+            color: _hovered
+                ? kAccentViolet.withValues(alpha: 0.6)
+                : appBorderColor(widget.isDark),
+          ),
+          boxShadow: [
+            if (_hovered)
+              BoxShadow(
+                color: kAccentViolet.withValues(alpha: widget.isDark ? 0.12 : 0.05),
+                blurRadius: 16,
+                offset: const Offset(0, 4),
+              ),
+          ],
         ),
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(18),
-          onTap: () {
-            if (repo.htmlUrl.isNotEmpty) {
-              openLink(repo.htmlUrl);
-            } else {
-              _showRepoDetailsSheet(context);
-            }
-          },
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Repo Icon
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF1E3A8A).withValues(alpha: 0.4),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: kElectricBlue.withValues(alpha: 0.4),
+        child: Material(
+          type: MaterialType.transparency,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(kRadiusMd),
+            onTap: () {
+              if (repo.htmlUrl.isNotEmpty) {
+                openLink(repo.htmlUrl);
+              } else {
+                _showRepoDetailsSheet(context);
+              }
+            },
+            child: Padding(
+              padding: const EdgeInsets.all(18),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: kAccentViolet.withValues(alpha: widget.isDark ? 0.16 : 0.1),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(
+                      Icons.code_rounded,
+                      color: kAccentViolet,
+                      size: 20,
                     ),
                   ),
-                  child: const Icon(
-                    Icons.code_rounded,
-                    color: kElectricBlue,
-                    size: 20,
-                  ),
-                ),
-                const SizedBox(width: 14),
+                  const SizedBox(width: 14),
 
-                // Repo Details
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        repo.name,
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w800,
-                          color: isDark ? Colors.white : kLightTextPrimary,
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          repo.name,
+                          style: GoogleFonts.spaceGrotesk(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: appTextPrimary(widget.isDark),
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        repo.description,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: isDark ? kDarkTextSecondary : kLightTextSecondary,
-                          height: 1.4,
+                        const SizedBox(height: 4),
+                        Text(
+                          repo.description,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.inter(
+                            fontSize: 12,
+                            color: appTextSecondary(widget.isDark),
+                            height: 1.4,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 10),
-                      SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: Row(
+                        const SizedBox(height: 12),
+                        Row(
                           children: [
-                            // Language Dot
                             Container(
                               width: 8,
                               height: 8,
@@ -459,54 +533,52 @@ class _RepoCard extends StatelessWidget {
                             const SizedBox(width: 6),
                             Text(
                               repo.language,
-                              style: TextStyle(
-                                fontSize: 12,
+                              style: GoogleFonts.jetBrainsMono(
+                                fontSize: 11,
                                 fontWeight: FontWeight.w600,
-                                color: isDark ? kDarkTextSecondary : kLightTextSecondary,
+                                color: appTextSecondary(widget.isDark),
                               ),
                             ),
                             const SizedBox(width: 16),
 
-                            // Stars
                             const Icon(Icons.star_outline_rounded,
-                                size: 15, color: kAmberBadge),
+                                size: 14, color: kAmberBadge),
                             const SizedBox(width: 4),
                             Text(
                               '${repo.stargazersCount}',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: isDark ? kDarkTextSecondary : kLightTextSecondary,
+                              style: GoogleFonts.jetBrainsMono(
+                                fontSize: 11,
+                                color: appTextSecondary(widget.isDark),
                               ),
                             ),
                             const SizedBox(width: 14),
 
-                            // Forks
                             Icon(
                               Icons.fork_right_rounded,
-                              size: 15,
-                              color: isDark ? kDarkTextMuted : Colors.grey,
+                              size: 14,
+                              color: appTextMuted(widget.isDark),
                             ),
                             const SizedBox(width: 4),
                             Text(
                               '${repo.forksCount}',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: isDark ? kDarkTextSecondary : kLightTextSecondary,
+                              style: GoogleFonts.jetBrainsMono(
+                                fontSize: 11,
+                                color: appTextSecondary(widget.isDark),
                               ),
                             ),
                           ],
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
 
-                const SizedBox(width: 8),
-                Icon(
-                  Icons.chevron_right_rounded,
-                  color: isDark ? kDarkTextMuted : Colors.grey,
-                ),
-              ],
+                  const SizedBox(width: 8),
+                  Icon(
+                    Icons.chevron_right_rounded,
+                    color: _hovered ? kAccentViolet : appTextMuted(widget.isDark),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -532,7 +604,7 @@ class _RepoCard extends StatelessWidget {
   void _showRepoDetailsSheet(BuildContext context) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: isDark ? kDarkSurface : Colors.white,
+      backgroundColor: widget.isDark ? kDarkSurface : Colors.white,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -547,7 +619,7 @@ class _RepoCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: kPrimaryPurple.withValues(alpha: 0.15),
+                    color: kAccentViolet.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: const Icon(Icons.code_rounded, color: kAccentViolet),
@@ -558,19 +630,19 @@ class _RepoCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        repo.name,
-                        style: TextStyle(
+                        widget.repo.name,
+                        style: GoogleFonts.spaceGrotesk(
                           fontSize: 18,
                           fontWeight: FontWeight.w800,
-                          color: isDark ? Colors.white : kLightTextPrimary,
+                          color: appTextPrimary(widget.isDark),
                         ),
                       ),
                       Text(
-                        repo.language,
-                        style: const TextStyle(
-                          fontSize: 12,
+                        widget.repo.language,
+                        style: GoogleFonts.jetBrainsMono(
+                          fontSize: 11,
                           color: kAccentViolet,
-                          fontWeight: FontWeight.w600,
+                          fontWeight: FontWeight.w700,
                         ),
                       ),
                     ],
@@ -580,34 +652,32 @@ class _RepoCard extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              repo.description,
-              style: TextStyle(
-                fontSize: 14,
+              widget.repo.description,
+              style: GoogleFonts.inter(
+                fontSize: 13,
                 height: 1.5,
-                color: isDark ? kDarkTextSecondary : kLightTextSecondary,
+                color: appTextSecondary(widget.isDark),
               ),
             ),
-            if (repo.topics.isNotEmpty) ...[
+            if (widget.repo.topics.isNotEmpty) ...[
               const SizedBox(height: 16),
               Wrap(
                 spacing: 8,
                 runSpacing: 6,
-                children: repo.topics
+                children: widget.repo.topics
                     .map(
                       (t) => Container(
                         padding: const EdgeInsets.symmetric(
                             horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
-                          color: isDark ? kDarkSurface2 : kLightSurface2,
-                          borderRadius: BorderRadius.circular(8),
+                          color: widget.isDark ? kDarkSurface2 : kLightSurface2,
+                          borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(
                           '#$t',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: isDark
-                                ? kDarkTextSecondary
-                                : kLightTextSecondary,
+                          style: GoogleFonts.jetBrainsMono(
+                            fontSize: 11,
+                            color: appTextSecondary(widget.isDark),
                           ),
                         ),
                       ),
@@ -620,11 +690,7 @@ class _RepoCard extends StatelessWidget {
               width: double.infinity,
               child: FilledButton(
                 onPressed: () => Navigator.pop(context),
-                style: FilledButton.styleFrom(
-                  backgroundColor: kPrimaryPurple,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                ),
-                child: const Text('Close'),
+                child: const Text('Close Details'),
               ),
             ),
           ],

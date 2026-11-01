@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../constants.dart';
 import '../models/project.dart';
 import '../services/supabase_service.dart';
@@ -7,7 +8,7 @@ import '../widgets/project_card.dart';
 
 enum _Sort { defaultOrder, featuredFirst, titleAZ }
 
-/// Screen 3 — My Projects.
+/// Screen 3 — Editorial Projects Showcase matching SNJ Devfolio 2.0.
 class ProjectsScreen extends StatefulWidget {
   const ProjectsScreen({super.key});
 
@@ -75,15 +76,12 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
     });
   }
 
-  // ── Helpers ────────────────────────────────────────────────────────────────
   static List<String> _techOf(Project p) => p.techStack
       .split(RegExp(r'[,|•]'))
       .map((e) => e.trim())
       .where((e) => e.isNotEmpty)
       .toList();
 
-  /// The four most common technologies across all projects, so filters
-  /// follow the real data instead of a hard-coded list.
   static List<String> _topTechTags(List<Project> projects) {
     final counts = <String, int>{};
     final display = <String, String>{};
@@ -154,7 +152,6 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
     });
   }
 
-  // ── UI ─────────────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -165,13 +162,40 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
       color: kAccentViolet,
       child: ListView(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.fromLTRB(20, 14, 20, 40),
+        padding: const EdgeInsets.fromLTRB(20, 20, 20, 48),
         children: [
-          ScreenTitle(
-            'My Projects',
-            actions: [
+          // ── Screen Title with Space Grotesk & Actions ─────────────────
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '02 // ARCHIVE & SHOWCASE',
+                      style: GoogleFonts.jetBrainsMono(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: kAccentViolet,
+                        letterSpacing: 1.2,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'My Projects',
+                      style: GoogleFonts.spaceGrotesk(
+                        fontSize: 28,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.8,
+                        color: appTextPrimary(isDark),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
               PopupMenuButton<_Sort>(
-                tooltip: 'Sort',
+                tooltip: 'Sort Order',
                 initialValue: _sort,
                 icon: Icon(Icons.sort_rounded, color: appTextPrimary(isDark)),
                 onSelected: (value) => setState(() {
@@ -181,11 +205,11 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
                 itemBuilder: (_) => const [
                   PopupMenuItem(
                     value: _Sort.defaultOrder,
-                    child: Text('Default order'),
+                    child: Text('Default Order'),
                   ),
                   PopupMenuItem(
                     value: _Sort.featuredFirst,
-                    child: Text('Featured first'),
+                    child: Text('Featured First'),
                   ),
                   PopupMenuItem(
                     value: _Sort.titleAZ,
@@ -194,7 +218,7 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
                 ],
               ),
               IconButton(
-                tooltip: _isSearchOpen ? 'Close search' : 'Search projects',
+                tooltip: _isSearchOpen ? 'Close Search' : 'Search Projects',
                 icon: Icon(
                   _isSearchOpen ? Icons.close_rounded : Icons.search_rounded,
                   color: appTextPrimary(isDark),
@@ -214,10 +238,11 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
           ),
 
           if (_isSearchOpen) ...[
-            const SizedBox(height: 10),
+            const SizedBox(height: 12),
             TextField(
               controller: _searchCtrl,
               autofocus: true,
+              style: GoogleFonts.inter(fontSize: 14),
               decoration: InputDecoration(
                 hintText: 'Search by title, tech stack, or description...',
                 prefixIcon: const Icon(Icons.search_rounded, size: 20),
@@ -237,7 +262,7 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
                           });
                         },
                       )
-: null,
+                    : null,
               ),
               onChanged: (val) => setState(() {
                 _searchQuery = val;
@@ -246,17 +271,17 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
             ),
           ],
 
-          const SizedBox(height: 14),
+          const SizedBox(height: 18),
 
-          // Filter chips
+          // ── Minimalist Filter Chips ──────────────────────────────────
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
               children: [
                 for (final filter in _filters)
                   Padding(
-                    padding: const EdgeInsets.only(right: 10),
-                    child: _FilterChipButton(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: _EditorialFilterChip(
                       label: filter,
                       selected: _selectedFilter == filter,
                       isDark: isDark,
@@ -270,32 +295,56 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
             ),
           ),
 
-          const SizedBox(height: 14),
+          const SizedBox(height: 16),
 
+          // Metadata line in JetBrains Mono
           if (!showSkeleton)
-            Text(
-              '${_filteredProjects.length} of ${_allProjects.length} projects',
-              style: TextStyle(fontSize: 12, color: appTextMuted(isDark)),
+            Row(
+              children: [
+                Text(
+                  'SHOWING ${_filteredProjects.length} OF ${_allProjects.length} DIGITAL PRODUCTS',
+                  style: GoogleFonts.jetBrainsMono(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: appTextMuted(isDark),
+                    letterSpacing: 0.8,
+                  ),
+                ),
+                const Spacer(),
+                if (_selectedFilter != 'All' || _searchQuery.isNotEmpty)
+                  InkWell(
+                    onTap: _resetFilters,
+                    child: Text(
+                      'CLEAR FILTERS',
+                      style: GoogleFonts.jetBrainsMono(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        color: kAccentViolet,
+                        letterSpacing: 0.8,
+                      ),
+                    ),
+                  ),
+              ],
             ),
 
-          const SizedBox(height: 10),
+          const SizedBox(height: 16),
 
-          // Fallback notice
+          // Fallback notice banner
           if (_usingFallback && !showSkeleton) ...[
             _FallbackBanner(
               isDark: isDark,
               hasError: _error != null,
               onRetry: _load,
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 16),
           ],
 
-          // Body
+          // Project List / Responsive Grid
           if (showSkeleton) ...[
             const ProjectCardSkeleton(),
-            const SizedBox(height: 14),
+            const SizedBox(height: 16),
             const ProjectCardSkeleton(),
-            const SizedBox(height: 14),
+            const SizedBox(height: 16),
             const ProjectCardSkeleton(),
           ] else if (_filteredProjects.isEmpty)
             EmptyState(
@@ -312,7 +361,7 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
           else
             LayoutBuilder(
               builder: (context, constraints) {
-                const gap = 14.0;
+                const gap = 16.0;
                 final twoColumns = constraints.maxWidth >= 720;
                 final cardWidth = twoColumns
                     ? (constraints.maxWidth - gap) / 2
@@ -321,8 +370,14 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
                   spacing: gap,
                   runSpacing: gap,
                   children: [
-                    for (final p in _filteredProjects)
-                      SizedBox(width: cardWidth, child: ProjectCard(project: p)),
+                    for (int i = 0; i < _filteredProjects.length; i++)
+                      SizedBox(
+                        width: cardWidth,
+                        child: ProjectCard(
+                          project: _filteredProjects[i],
+                          index: i,
+                        ),
+                      ),
                   ],
                 );
               },
@@ -333,8 +388,8 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
   }
 }
 
-class _FilterChipButton extends StatelessWidget {
-  const _FilterChipButton({
+class _EditorialFilterChip extends StatelessWidget {
+  const _EditorialFilterChip({
     required this.label,
     required this.selected,
     required this.isDark,
@@ -351,34 +406,29 @@ class _FilterChipButton extends StatelessWidget {
     return Material(
       type: MaterialType.transparency,
       child: InkWell(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(kRadiusSm),
         onTap: onTap,
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+          duration: const Duration(milliseconds: 180),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           decoration: BoxDecoration(
-            gradient: selected ? kVioletPurpleGradient : null,
-            color: selected ? null : (isDark ? kDarkSurface : Colors.white),
-            borderRadius: BorderRadius.circular(16),
+            color: selected
+                ? (isDark ? kAccentViolet.withValues(alpha: 0.22) : const Color(0xFFEDE9FE))
+                : (isDark ? kDarkSurface : Colors.white),
+            borderRadius: BorderRadius.circular(kRadiusSm),
             border: Border.all(
-              color: selected ? Colors.transparent : appBorderColor(isDark),
+              color: selected ? kAccentViolet : appBorderColor(isDark),
+              width: selected ? 1.4 : 1.0,
             ),
-            boxShadow: selected
-                ? [
-                    BoxShadow(
-                      color: kPrimaryPurple.withValues(alpha: 0.4),
-                      blurRadius: 10,
-                      offset: const Offset(0, 3),
-                    ),
-                  ]
-                : null,
           ),
           child: Text(
             label,
-            style: TextStyle(
-              color: selected ? Colors.white : appTextSecondary(isDark),
+            style: GoogleFonts.jetBrainsMono(
+              color: selected
+                  ? (isDark ? Colors.white : kAccentViolet)
+                  : appTextSecondary(isDark),
               fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-              fontSize: 13,
+              fontSize: 12,
             ),
           ),
         ),
@@ -401,12 +451,10 @@ class _FallbackBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: isDark
-            ? kPrimaryPurple.withValues(alpha: 0.1)
-            : const Color(0xFFF3E8FF),
-        borderRadius: BorderRadius.circular(14),
+        color: isDark ? kDarkSurface2 : const Color(0xFFF3E8FF),
+        borderRadius: BorderRadius.circular(kRadiusMd),
         border: Border.all(color: kAccentViolet.withValues(alpha: 0.3)),
       ),
       child: Row(
@@ -416,16 +464,28 @@ class _FallbackBanner extends StatelessWidget {
             size: 18,
             color: kAccentViolet,
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: 12),
           Expanded(
             child: Text(
               hasError
-                  ? "Couldn't reach the project database. Showing sample projects."
-                  : 'No published projects yet. Showing sample projects.',
-              style: TextStyle(fontSize: 12, color: appTextSecondary(isDark)),
+                  ? "Couldn't reach remote database. Showing verified local sample projects."
+                  : 'No published remote projects found. Showing verified sample projects.',
+              style: GoogleFonts.inter(
+                fontSize: 12,
+                color: appTextSecondary(isDark),
+              ),
             ),
           ),
-          TextButton(onPressed: onRetry, child: const Text('Retry')),
+          TextButton(
+            onPressed: onRetry,
+            child: Text(
+              'RETRY',
+              style: GoogleFonts.jetBrainsMono(
+                fontWeight: FontWeight.w700,
+                fontSize: 11,
+              ),
+            ),
+          ),
         ],
       ),
     );

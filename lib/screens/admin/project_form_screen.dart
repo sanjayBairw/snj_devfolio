@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../constants.dart';
 import '../../models/project.dart';
 import '../../services/supabase_service.dart';
 import '../../utils/url_utils.dart';
+import '../../widgets/app_ui.dart';
 
-/// Add or edit a single portfolio project.
-/// Pass [project] to edit; leave null to create a new one.
+/// Screen 6c — Project Creation & Modification Screen matching SNJ Devfolio 2.0.
 class ProjectFormScreen extends StatefulWidget {
   const ProjectFormScreen({super.key, this.project});
   final Project? project;
@@ -96,114 +97,200 @@ class _ProjectFormScreenState extends State<ProjectFormScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
       appBar: AppBar(
-        title: Text(_isEditing ? 'Edit project' : 'Add project'),
-        actions: [
-          TextButton(
-            onPressed: _saving ? null : _save,
-            child: _saving
-                ? const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2))
-                : const Text('Save'),
+        title: Text(
+          _isEditing ? 'Edit Project Record' : 'Create New Project',
+          style: GoogleFonts.spaceGrotesk(
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
           ),
-          const SizedBox(width: 8),
+        ),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: TextButton(
+              onPressed: _saving ? null : _save,
+              child: _saving
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : Text(
+                      'SAVE RECORD',
+                      style: GoogleFonts.jetBrainsMono(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 12,
+                        color: kAccentViolet,
+                      ),
+                    ),
+            ),
+          ),
         ],
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 48),
         child: Center(
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 600),
+            constraints: const BoxConstraints(maxWidth: 680),
             child: Form(
               key: _formKey,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (_error != null)
-                    _ErrorBanner(message: _error!),
+                  if (_error != null) ...[
+                    Container(
+                      width: double.infinity,
+                      margin: const EdgeInsets.only(bottom: 20),
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: Colors.red.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(kRadiusMd),
+                        border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
+                      ),
+                      child: Text(
+                        _error!,
+                        style: GoogleFonts.inter(color: Colors.redAccent, fontSize: 13),
+                      ),
+                    ),
+                  ],
 
-                  _Field(
+                  // ── General Information ─────────────────────────────────
+                  const SectionHeader(
+                    'General Specifications',
+                    index: '01',
+                    subtitle: 'Core product title and comprehensive summary',
+                  ),
+                  const SizedBox(height: 16),
+
+                  _EditorialField(
                     controller: _title,
-                    label: 'Project title *',
+                    label: 'Project Title *',
+                    hint: 'e.g. SignSpeak AI',
                     icon: Icons.title_rounded,
                     validator: (v) => v == null || v.trim().length < 2
                         ? 'Title must be at least 2 characters'
                         : null,
                   ),
-                  _Field(
+                  _EditorialField(
                     controller: _description,
                     label: 'Description *',
+                    hint: 'Explain the core functionality and problem it solves...',
                     icon: Icons.description_outlined,
                     maxLines: 4,
                     validator: (v) => v == null || v.trim().length < 10
                         ? 'Description must be at least 10 characters'
                         : null,
                   ),
-                  _Field(
+                  _EditorialField(
                     controller: _techStack,
-                    label: 'Tech stack  (use • as separator)',
-                    hint: 'Flutter • Dart • Firebase',
+                    label: 'Tech Stack (comma or • separated)',
+                    hint: 'Flutter • Dart • Supabase • REST API',
                     icon: Icons.code_rounded,
                   ),
-                  _Field(
+
+                  const SizedBox(height: 28),
+
+                  // ── URLs and Media ──────────────────────────────────────
+                  const SectionHeader(
+                    'Repositories & Deployments',
+                    index: '02',
+                    subtitle: 'Online links for code review and live demonstrations',
+                  ),
+                  const SizedBox(height: 16),
+
+                  _EditorialField(
                     controller: _githubUrl,
-                    label: 'GitHub URL',
-                    hint: 'https://github.com/...',
+                    label: 'GitHub Repository URL',
+                    hint: 'https://github.com/username/project',
                     icon: Icons.link_rounded,
                     keyboardType: TextInputType.url,
                     validator: (v) => _urlValidator(v),
                   ),
-                  _Field(
+                  _EditorialField(
                     controller: _demoUrl,
-                    label: 'Live demo URL',
-                    hint: 'https://...',
+                    label: 'Live Demonstration URL',
+                    hint: 'https://your-demo-domain.com',
                     icon: Icons.play_circle_outline,
                     keyboardType: TextInputType.url,
                     validator: (v) => _urlValidator(v),
                   ),
-                  _Field(
+                  _EditorialField(
                     controller: _imageUrl,
-                    label: 'Image URL  (optional)',
-                    hint: 'https://...jpg or .png',
+                    label: 'Showcase Cover Image URL (optional)',
+                    hint: 'https://.../cover.jpg',
                     icon: Icons.image_outlined,
                     keyboardType: TextInputType.url,
                     validator: (v) => _urlValidator(v),
                   ),
-                  _Field(
+
+                  const SizedBox(height: 28),
+
+                  // ── Status & Priority ───────────────────────────────────
+                  const SectionHeader(
+                    'Visibility & Ordering',
+                    index: '03',
+                    subtitle: 'Public visibility flags and display sequence priority',
+                  ),
+                  const SizedBox(height: 16),
+
+                  _EditorialField(
                     controller: _displayOrder,
-                    label: 'Display order',
-                    hint: '0 = first',
+                    label: 'Display Sequence Order',
+                    hint: '0 = Highest Priority',
                     icon: Icons.sort_rounded,
                     keyboardType: TextInputType.number,
                     validator: (v) {
                       if (v == null || v.isEmpty) return null;
-                      if (int.tryParse(v) == null) return 'Enter a number';
+                      if (int.tryParse(v) == null) return 'Must be a valid integer';
                       return null;
                     },
                   ),
-                  const SizedBox(height: 8),
-                  _SwitchRow(
-                    label: 'Published',
-                    subtitle: 'Visible in the public portfolio',
-                    value: _isPublished,
-                    onChanged: (v) => setState(() => _isPublished = v),
+
+                  Container(
+                    margin: const EdgeInsets.only(top: 8),
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: isDark ? kDarkSurface : Colors.white,
+                      borderRadius: BorderRadius.circular(kRadiusMd),
+                      border: Border.all(color: appBorderColor(isDark)),
+                    ),
+                    child: Column(
+                      children: [
+                        _ModernSwitchTile(
+                          label: 'Publish Publicly',
+                          subtitle: 'Instantly visible to all visitors in the public portfolio',
+                          value: _isPublished,
+                          isDark: isDark,
+                          onChanged: (v) => setState(() => _isPublished = v),
+                        ),
+                        Divider(height: 24, color: appBorderColor(isDark)),
+                        _ModernSwitchTile(
+                          label: 'Featured Project',
+                          subtitle: 'Showcase in hero showcase and highlight with a featured badge',
+                          value: _isFeatured,
+                          isDark: isDark,
+                          onChanged: (v) => setState(() => _isFeatured = v),
+                        ),
+                      ],
+                    ),
                   ),
-                  _SwitchRow(
-                    label: 'Featured',
-                    subtitle: 'Highlighted with a ★ badge',
-                    value: _isFeatured,
-                    onChanged: (v) => setState(() => _isFeatured = v),
-                  ),
-                  const SizedBox(height: 24),
+
+                  const SizedBox(height: 32),
+
                   SizedBox(
                     width: double.infinity,
+                    height: 50,
                     child: FilledButton.icon(
                       onPressed: _saving ? null : _save,
-                      icon: const Icon(Icons.save_outlined),
-                      label: Text(_isEditing ? 'Save changes' : 'Create project'),
+                      icon: const Icon(Icons.save_outlined, size: 18),
+                      label: Text(_isEditing ? 'Update Project Record' : 'Publish New Project'),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: kAccentViolet,
+                      ),
                     ),
                   ),
                 ],
@@ -216,16 +303,14 @@ class _ProjectFormScreenState extends State<ProjectFormScreen> {
   }
 
   String? _urlValidator(String? v) {
-    if (v == null || v.trim().isEmpty) return null; // optional
-    if (!isValidUrl(v.trim())) return 'Enter a valid https:// URL';
+    if (v == null || v.trim().isEmpty) return null;
+    if (!isValidUrl(v.trim())) return 'Enter a valid URL starting with http:// or https://';
     return null;
   }
 }
 
-// ── Helper widgets ─────────────────────────────────────────────────────────────
-
-class _Field extends StatelessWidget {
-  const _Field({
+class _EditorialField extends StatelessWidget {
+  const _EditorialField({
     required this.controller,
     required this.label,
     this.hint,
@@ -234,6 +319,7 @@ class _Field extends StatelessWidget {
     this.keyboardType,
     this.validator,
   });
+
   final TextEditingController controller;
   final String label;
   final String? hint;
@@ -245,15 +331,16 @@ class _Field extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.only(bottom: 14),
       child: TextFormField(
         controller: controller,
         maxLines: maxLines,
         keyboardType: keyboardType,
+        style: GoogleFonts.inter(fontSize: 14),
         decoration: InputDecoration(
           labelText: label,
           hintText: hint,
-          prefixIcon: Icon(icon),
+          prefixIcon: Icon(icon, size: 20),
           alignLabelWithHint: maxLines > 1,
         ),
         validator: validator,
@@ -262,53 +349,55 @@ class _Field extends StatelessWidget {
   }
 }
 
-class _SwitchRow extends StatelessWidget {
-  const _SwitchRow({
+class _ModernSwitchTile extends StatelessWidget {
+  const _ModernSwitchTile({
     required this.label,
     required this.subtitle,
     required this.value,
+    required this.isDark,
     required this.onChanged,
   });
+
   final String label;
   final String subtitle;
   final bool value;
+  final bool isDark;
   final ValueChanged<bool> onChanged;
 
   @override
   Widget build(BuildContext context) {
-    return SwitchListTile.adaptive(
-      contentPadding: EdgeInsets.zero,
-      title: Text(label,
-          style: const TextStyle(fontWeight: FontWeight.w700)),
-      subtitle: Text(subtitle,
-          style: TextStyle(
-              color: Theme.of(context).brightness == Brightness.dark
-                  ? kMuted
-                  : const Color(0xFF546E7A),
-              fontSize: 12)),
-      value: value,
-      onChanged: onChanged,
-    );
-  }
-}
-
-class _ErrorBanner extends StatelessWidget {
-  const _ErrorBanner({required this.message});
-  final String message;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.red.withValues(alpha: .1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.red.withValues(alpha: .3)),
-      ),
-      child: Text(message,
-          style: const TextStyle(color: Colors.redAccent, fontSize: 13)),
+    return Row(
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: GoogleFonts.spaceGrotesk(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: appTextPrimary(isDark),
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                subtitle,
+                style: GoogleFonts.inter(
+                  fontSize: 12,
+                  color: appTextSecondary(isDark),
+                ),
+              ),
+            ],
+          ),
+        ),
+        Switch.adaptive(
+          value: value,
+          activeTrackColor: kAccentViolet,
+          activeThumbColor: Colors.white,
+          onChanged: onChanged,
+        ),
+      ],
     );
   }
 }

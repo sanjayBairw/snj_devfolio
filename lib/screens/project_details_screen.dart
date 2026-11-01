@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../constants.dart';
 import '../models/project.dart';
 import '../utils/url_utils.dart';
+import '../widgets/app_ui.dart';
 
-/// Full-fidelity project details screen.
+/// Screen 3b — Premium Digital Case Study details screen.
 class ProjectDetailsScreen extends StatelessWidget {
   const ProjectDetailsScreen({super.key, required this.project});
   final Project project;
@@ -12,7 +14,7 @@ class ProjectDetailsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final tags = project.techStack
-        .split('•')
+        .split(RegExp(r'[,|•]'))
         .map((s) => s.trim())
         .where((s) => s.isNotEmpty)
         .toList();
@@ -21,8 +23,10 @@ class ProjectDetailsScreen extends StatelessWidget {
       appBar: AppBar(
         title: Text(
           project.title,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
+          style: GoogleFonts.spaceGrotesk(
+            fontWeight: FontWeight.w700,
+            fontSize: 17,
+          ),
         ),
         actions: [
           if (project.githubUrl.isNotEmpty)
@@ -41,36 +45,25 @@ class ProjectDetailsScreen extends StatelessWidget {
         ],
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(20, 10, 20, 40),
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 48),
         child: Center(
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 800),
+            constraints: const BoxConstraints(maxWidth: 960),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Hero Banner / Card
+                // ── Case Study Hero Banner ──────────────────────────────────
                 Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.all(24),
+                  padding: const EdgeInsets.all(28),
                   decoration: BoxDecoration(
                     color: isDark ? kDarkSurface : Colors.white,
-                    borderRadius: BorderRadius.circular(24),
-                    border: Border.all(
-                      color: isDark
-                          ? Colors.white.withValues(alpha: 0.08)
-                          : kLightBorder,
-                    ),
-                    gradient: isDark
-                        ? const LinearGradient(
-                            colors: [Color(0xFF131D35), Color(0xFF0F172A)],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          )
-                        : null,
+                    borderRadius: BorderRadius.circular(kRadiusXl),
+                    border: Border.all(color: appBorderColor(isDark)),
                     boxShadow: [
                       BoxShadow(
-                        color: kPrimaryPurple.withValues(alpha: isDark ? 0.15 : 0.08),
-                        blurRadius: 24,
+                        color: kAccentViolet.withValues(alpha: isDark ? 0.12 : 0.04),
+                        blurRadius: 30,
                         offset: const Offset(0, 8),
                       ),
                     ],
@@ -78,142 +71,136 @@ class ProjectDetailsScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                      // Top badges in JetBrains Mono
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
                         children: [
                           Container(
-                            width: 60,
-                            height: 60,
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 4),
                             decoration: BoxDecoration(
-                              gradient: kVioletPurpleGradient,
-                              borderRadius: BorderRadius.circular(18),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: kPrimaryPurple.withValues(alpha: 0.3),
-                                  blurRadius: 16,
-                                ),
-                              ],
+                              color: isDark ? kDarkSurface2 : kLightSurface2,
+                              borderRadius: BorderRadius.circular(kRadiusXs),
+                              border: Border.all(color: appBorderColor(isDark)),
                             ),
-                            child: Icon(
-                              _getProjectIcon(project.title),
-                              color: Colors.white,
-                              size: 32,
+                            child: Text(
+                              'CASE STUDY // 01',
+                              style: GoogleFonts.jetBrainsMono(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                                color: kAccentViolet,
+                                letterSpacing: 0.8,
+                              ),
                             ),
                           ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  project.title,
-                                  style: TextStyle(
-                                    fontSize: 22,
-                                    fontWeight: FontWeight.w900,
-                                    color: isDark ? Colors.white : kLightTextPrimary,
-                                  ),
+                          if (project.isFeatured)
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 10, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: kAccentViolet.withValues(alpha: isDark ? 0.2 : 0.12),
+                                borderRadius: BorderRadius.circular(kRadiusXs),
+                                border: Border.all(
+                                  color: kAccentViolet.withValues(alpha: 0.4),
                                 ),
-                                const SizedBox(height: 8),
-                                Wrap(
-                                  spacing: 8,
-                                  runSpacing: 6,
-                                  children: [
-                                    if (project.isFeatured)
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 10, vertical: 4),
-                                        decoration: BoxDecoration(
-                                          color: kPrimaryPurple.withValues(alpha: 0.2),
-                                          borderRadius: BorderRadius.circular(8),
-                                          border: Border.all(
-                                            color: kAccentViolet.withValues(alpha: 0.4),
-                                          ),
-                                        ),
-                                        child: const Text(
-                                          '★ Featured Project',
-                                          style: TextStyle(
-                                            color: kAccentViolet,
-                                            fontSize: 11,
-                                            fontWeight: FontWeight.w700,
-                                          ),
-                                        ),
-                                      ),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 10, vertical: 4),
-                                      decoration: BoxDecoration(
-                                        color: kEmeraldGreen.withValues(alpha: 0.15),
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      child: const Text(
-                                        'Verified',
-                                        style: TextStyle(
-                                          color: kEmeraldGreen,
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.w700,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
+                              ),
+                              child: Text(
+                                '★ Featured Project',
+                                style: GoogleFonts.jetBrainsMono(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w700,
+                                  color: kAccentViolet,
+                                  letterSpacing: 0.8,
                                 ),
-                              ],
+                              ),
+                            ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: kEmeraldGreen.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(kRadiusXs),
+                            ),
+                            child: Text(
+                              'Verified',
+                              style: GoogleFonts.jetBrainsMono(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                                color: kEmeraldGreen,
+                                letterSpacing: 0.8,
+                              ),
                             ),
                           ),
                         ],
                       ),
                       const SizedBox(height: 20),
+
+                      // Case study title in Space Grotesk
+                      Text(
+                        project.title,
+                        style: GoogleFonts.spaceGrotesk(
+                          fontSize: 32,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -1.0,
+                          color: appTextPrimary(isDark),
+                          height: 1.15,
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+
+                      // Detailed description
                       Text(
                         project.description,
-                        style: TextStyle(
+                        style: GoogleFonts.inter(
                           fontSize: 15,
-                          height: 1.6,
-                          color: isDark ? kDarkTextSecondary : kLightTextSecondary,
+                          height: 1.65,
+                          color: appTextSecondary(isDark),
                         ),
                       ),
                     ],
                   ),
                 ),
 
-                // Optional Project Image
+                // Optional project preview image
                 if (project.imageUrl.isNotEmpty) ...[
                   const SizedBox(height: 24),
                   ClipRRect(
-                    borderRadius: BorderRadius.circular(20),
-                    child: Image.network(
-                      project.imageUrl,
-                      width: double.infinity,
-                      height: 220,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                    borderRadius: BorderRadius.circular(kRadiusLg),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        border: Border.all(color: appBorderColor(isDark)),
+                      ),
+                      child: Image.network(
+                        project.imageUrl,
+                        width: double.infinity,
+                        height: 280,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                      ),
                     ),
                   ),
                 ],
 
-                // Key Features Section
+                const SizedBox(height: 32),
+
+                // ── Highlights & Key Engineering Features ────────────────────
                 if (project.features.isNotEmpty) ...[
-                  const SizedBox(height: 28),
-                  const Text(
+                  const SectionHeader(
                     'Key Highlights & Features',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 0.3,
-                    ),
+                    index: '01',
+                    subtitle: 'Architecture details, specialized modules and implementation notes',
                   ),
-                  const SizedBox(height: 14),
+                  const SizedBox(height: 16),
                   ...project.features.map(
                     (feature) => Padding(
                       padding: const EdgeInsets.only(bottom: 12),
                       child: Container(
-                        padding: const EdgeInsets.all(14),
+                        padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
                           color: isDark ? kDarkSurface : Colors.white,
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                            color: isDark
-                                ? Colors.white.withValues(alpha: 0.06)
-                                : kLightBorder,
-                          ),
+                          borderRadius: BorderRadius.circular(kRadiusMd),
+                          border: Border.all(color: appBorderColor(isDark)),
                         ),
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -221,23 +208,23 @@ class ProjectDetailsScreen extends StatelessWidget {
                             Container(
                               padding: const EdgeInsets.all(4),
                               decoration: BoxDecoration(
-                                color: kPrimaryPurple.withValues(alpha: 0.2),
+                                color: kAccentViolet.withValues(alpha: 0.2),
                                 shape: BoxShape.circle,
                               ),
                               child: const Icon(
                                 Icons.check_rounded,
-                                size: 16,
+                                size: 14,
                                 color: kAccentViolet,
                               ),
                             ),
-                            const SizedBox(width: 12),
+                            const SizedBox(width: 14),
                             Expanded(
                               child: Text(
                                 feature,
-                                style: TextStyle(
+                                style: GoogleFonts.inter(
                                   fontSize: 14,
-                                  height: 1.45,
-                                  color: isDark ? kDarkTextPrimary : kLightTextPrimary,
+                                  height: 1.5,
+                                  color: appTextPrimary(isDark),
                                 ),
                               ),
                             ),
@@ -246,20 +233,17 @@ class ProjectDetailsScreen extends StatelessWidget {
                       ),
                     ),
                   ),
+                  const SizedBox(height: 28),
                 ],
 
-                // Technologies Used
+                // ── Technical Stack & Ecosystem ──────────────────────────────
                 if (tags.isNotEmpty) ...[
-                  const SizedBox(height: 24),
-                  const Text(
-                    'Technologies & Tools',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 0.3,
-                    ),
+                  const SectionHeader(
+                    'Technical Stack & Ecosystem',
+                    index: '02',
+                    subtitle: 'Languages, frameworks and runtime technologies leveraged',
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 14),
                   Wrap(
                     spacing: 8,
                     runSpacing: 8,
@@ -269,29 +253,24 @@ class ProjectDetailsScreen extends StatelessWidget {
                             horizontal: 14, vertical: 8),
                         decoration: BoxDecoration(
                           color: isDark ? kDarkSurface2 : kLightSurface2,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: isDark
-                                ? kAccentViolet.withValues(alpha: 0.25)
-                                : kLightBorder,
-                          ),
+                          borderRadius: BorderRadius.circular(kRadiusSm),
+                          border: Border.all(color: appBorderColor(isDark)),
                         ),
                         child: Text(
                           t,
-                          style: TextStyle(
-                            color: isDark ? kAccentViolet : kPrimaryPurple,
+                          style: GoogleFonts.jetBrainsMono(
+                            color: isDark ? kAccentViolet : const Color(0xFF6D28D9),
                             fontWeight: FontWeight.w700,
-                            fontSize: 13,
+                            fontSize: 12,
                           ),
                         ),
                       );
                     }).toList(),
                   ),
+                  const SizedBox(height: 36),
                 ],
 
-                const SizedBox(height: 32),
-
-                // Primary Actions (Clean, robust layout without overflow)
+                // ── Primary Call to Actions ──────────────────────────────────
                 LayoutBuilder(
                   builder: (context, constraints) {
                     final hasGithub = project.githubUrl.trim().isNotEmpty;
@@ -303,32 +282,26 @@ class ProjectDetailsScreen extends StatelessWidget {
 
                     final githubButton = FilledButton.icon(
                       onPressed: () => openLink(project.githubUrl),
-                      icon: const Icon(Icons.code_rounded),
-                      label: const FittedBox(
-                        fit: BoxFit.scaleDown,
-                        child: Text('View on GitHub'),
-                      ),
+                      icon: const Icon(Icons.code_rounded, size: 18),
+                      label: const Text('View Source Code on GitHub'),
                       style: FilledButton.styleFrom(
-                        backgroundColor: kPrimaryPurple,
+                        backgroundColor: kAccentViolet,
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 18, vertical: 16),
+                            horizontal: 22, vertical: 16),
                       ),
                     );
 
                     final demoButton = OutlinedButton.icon(
                       onPressed: () => openLink(project.demoUrl),
-                      icon: const Icon(Icons.open_in_new_rounded),
-                      label: const FittedBox(
-                        fit: BoxFit.scaleDown,
-                        child: Text('Live Demo'),
-                      ),
+                      icon: const Icon(Icons.open_in_new_rounded, size: 18),
+                      label: const Text('Launch Live Demonstration'),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 18, vertical: 16),
+                            horizontal: 22, vertical: 16),
                       ),
                     );
 
-                    final isMobile = constraints.maxWidth < 480;
+                    final isMobile = constraints.maxWidth < 560;
 
                     if (hasGithub && hasDemo) {
                       if (isMobile) {
@@ -362,18 +335,5 @@ class ProjectDetailsScreen extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  IconData _getProjectIcon(String title) {
-    if (title.contains('SignSpeak') || title.contains('Sign')) {
-      return Icons.pan_tool_alt_rounded;
-    } else if (title.contains('Devfolio') || title.contains('Portfolio')) {
-      return Icons.code_rounded;
-    } else if (title.contains('Nutrition') || title.contains('Coach')) {
-      return Icons.favorite_rounded;
-    } else if (title.contains('Video') || title.contains('Forensic')) {
-      return Icons.video_settings_rounded;
-    }
-    return Icons.terminal_rounded;
   }
 }

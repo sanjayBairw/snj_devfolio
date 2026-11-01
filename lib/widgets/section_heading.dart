@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../constants.dart';
+import 'app_ui.dart';
 
-/// Labelled section divider used throughout the portfolio.
+/// Labelled section divider with Swiss typography.
 class SectionHeading extends StatelessWidget {
   const SectionHeading(this.title, {super.key, required this.subtitle});
   final String title;
@@ -14,21 +16,22 @@ class SectionHeading extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          title,
-          style: TextStyle(
-            fontWeight: FontWeight.w900,
+          title.toUpperCase(),
+          style: GoogleFonts.jetBrainsMono(
+            fontWeight: FontWeight.w700,
             fontSize: 11,
-            color: isDark ? kAccent : const Color(0xFF1A6B8A),
-            letterSpacing: 2.2,
+            color: kAccentViolet,
+            letterSpacing: 2.0,
           ),
         ),
         const SizedBox(height: 6),
         Text(
           subtitle,
-          style: TextStyle(
+          style: GoogleFonts.spaceGrotesk(
             fontSize: 22,
             fontWeight: FontWeight.w800,
-            color: isDark ? Colors.white : const Color(0xFF0D1B2A),
+            color: appTextPrimary(isDark),
+            letterSpacing: -0.4,
           ),
         ),
       ],

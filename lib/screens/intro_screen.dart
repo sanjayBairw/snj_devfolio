@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../constants.dart';
 import 'portfolio_shell.dart';
 
-/// Animated splash screen matching the reference design.
+/// Minimalist studio-level entrance screen for SNJ Devfolio 2.0.
 class IntroScreen extends StatefulWidget {
   const IntroScreen({super.key});
 
@@ -14,7 +15,7 @@ class _IntroScreenState extends State<IntroScreen>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
   late final Animation<double> _fadeAnimation;
-  late final Animation<double> _scaleAnimation;
+  late final Animation<double> _slideAnimation;
   late final Animation<double> _progressAnimation;
 
   @override
@@ -22,30 +23,30 @@ class _IntroScreenState extends State<IntroScreen>
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1400),
+      duration: const Duration(milliseconds: 1500),
     );
 
     _fadeAnimation = CurvedAnimation(
       parent: _controller,
-      curve: const Interval(0.0, 0.7, curve: Curves.easeOut),
+      curve: const Interval(0.0, 0.65, curve: Curves.easeOut),
     );
 
-    _scaleAnimation = Tween<double>(begin: 0.88, end: 1.0).animate(
+    _slideAnimation = Tween<double>(begin: 16.0, end: 0.0).animate(
       CurvedAnimation(
         parent: _controller,
-        curve: const Interval(0.0, 0.7, curve: Curves.easeOutCubic),
+        curve: const Interval(0.0, 0.75, curve: Curves.easeOutCubic),
       ),
     );
 
     _progressAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
         parent: _controller,
-        curve: const Interval(0.2, 1.0, curve: Curves.easeInOut),
+        curve: const Interval(0.25, 0.95, curve: Curves.easeInOutCubic),
       ),
     );
 
     _controller.forward();
-    Future.delayed(const Duration(milliseconds: 1600), _navigate);
+    Future.delayed(const Duration(milliseconds: 1750), _navigate);
   }
 
   void _navigate() {
@@ -55,7 +56,7 @@ class _IntroScreenState extends State<IntroScreen>
         pageBuilder: (_, __, ___) => const PortfolioShell(),
         transitionsBuilder: (_, anim, __, child) =>
             FadeTransition(opacity: anim, child: child),
-        transitionDuration: const Duration(milliseconds: 400),
+        transitionDuration: const Duration(milliseconds: 450),
       ),
     );
   }
@@ -72,165 +73,149 @@ class _IntroScreenState extends State<IntroScreen>
       backgroundColor: kDarkBackground,
       body: Stack(
         children: [
-          // Background ambient neon wave painter
+          // Subtle architectural grid background
           Positioned.fill(
             child: CustomPaint(
-              painter: _WaveRibbonPainter(),
+              painter: _ArchitecturalGridPainter(),
             ),
           ),
 
-          // Central branding
+          // Central Studio Identity
           Center(
-            child: FadeTransition(
-              opacity: _fadeAnimation,
-              child: ScaleTransition(
-                scale: _scaleAnimation,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 28),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // Glowing Neon Icon Container
-                      Container(
-                        width: 104,
-                        height: 104,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF0D1224),
-                          borderRadius: BorderRadius.circular(28),
-                          border: Border.all(
-                            color: kAccentViolet.withValues(alpha: 0.5),
-                            width: 2,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: kPrimaryPurple.withValues(alpha: 0.35),
-                              blurRadius: 40,
-                              spreadRadius: 8,
+            child: AnimatedBuilder(
+              animation: _controller,
+              builder: (context, child) {
+                return Opacity(
+                  opacity: _fadeAnimation.value,
+                  child: Transform.translate(
+                    offset: Offset(0, _slideAnimation.value),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 32),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // Brand Mono Tag
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 5,
                             ),
-                            BoxShadow(
-                              color: kElectricBlue.withValues(alpha: 0.2),
-                              blurRadius: 30,
-                              offset: const Offset(0, 10),
-                            ),
-                          ],
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(26),
-                          child: Padding(
-                            padding: const EdgeInsets.all(12),
-                            child: Image.asset(
-                              'assets/logo/Neon SNJ Devfolio Logo.png',
-                              fit: BoxFit.contain,
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 28),
-
-                      // SNJ Devfolio Title
-                      RichText(
-                        textAlign: TextAlign.center,
-                        text: const TextSpan(
-                          children: [
-                            TextSpan(
-                              text: 'SNJ ',
-                              style: TextStyle(
-                                fontSize: 32,
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: 1.2,
-                                color: Colors.white,
+                            decoration: BoxDecoration(
+                              color: kDarkSurface2,
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(
+                                color: kDarkBorder,
                               ),
                             ),
-                            TextSpan(
-                              text: 'Devfolio',
-                              style: TextStyle(
-                                fontSize: 32,
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: 1.2,
+                            child: Text(
+                              'DIGITAL IDENTITY // 2.0',
+                              style: GoogleFonts.jetBrainsMono(
                                 color: kAccentViolet,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 1.5,
                               ),
                             ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 10),
+                          ),
+                          const SizedBox(height: 28),
 
-                      // Tagline
-                      const Text(
-                        kDevTagline,
-                        style: TextStyle(
-                          color: kDarkTextSecondary,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          letterSpacing: 2.0,
-                        ),
-                      ),
-                      const SizedBox(height: 70),
+                          // Brand Name in Space Grotesk
+                          RichText(
+                            textAlign: TextAlign.center,
+                            text: TextSpan(
+                              children: [
+                                TextSpan(
+                                  text: 'SNJ ',
+                                  style: GoogleFonts.spaceGrotesk(
+                                    fontSize: 42,
+                                    fontWeight: FontWeight.w800,
+                                    letterSpacing: -1.0,
+                                    color: kDarkTextPrimary,
+                                  ),
+                                ),
+                                TextSpan(
+                                  text: 'DEVFOLIO',
+                                  style: GoogleFonts.spaceGrotesk(
+                                    fontSize: 42,
+                                    fontWeight: FontWeight.w800,
+                                    letterSpacing: -1.0,
+                                    color: kAccentViolet,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 12),
 
-                      // Subtitle
-                      const Text(
-                        kDevSubtitle,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: kDarkTextMuted,
-                          fontSize: 13,
-                          height: 1.5,
-                          letterSpacing: 0.5,
-                        ),
+                          // Editorial Tagline
+                          Text(
+                            kDevHeadline.replaceAll('\n', ' • '),
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.inter(
+                              color: kDarkTextSecondary,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              letterSpacing: 0.3,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+
+                          Text(
+                            'Engineering & Design by $kDevName',
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.jetBrainsMono(
+                              color: kDarkTextMuted,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
-                ),
-              ),
+                );
+              },
             ),
           ),
 
-          // Bottom loading indicator matching screenshot
+          // Bottom sleek progress track
           Positioned(
             left: 48,
             right: 48,
             bottom: 48,
             child: AnimatedBuilder(
               animation: _controller,
-              child: const Text(
-                'Loading your portfolio...',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: kDarkTextMuted,
-                  fontSize: 12,
-                  letterSpacing: 0.5,
-                ),
-              ),
               builder: (context, child) {
                 return Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Container(
-                      height: 3,
-                      width: 140,
+                      height: 2,
+                      width: 160,
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.08),
-                        borderRadius: BorderRadius.circular(2),
+                        color: kDarkBorder,
+                        borderRadius: BorderRadius.circular(1),
                       ),
                       child: Align(
                         alignment: Alignment.centerLeft,
                         child: Container(
-                          width: 140 * _progressAnimation.value,
+                          width: 160 * _progressAnimation.value,
                           decoration: BoxDecoration(
-                            gradient: kPurpleBlueGradient,
-                            borderRadius: BorderRadius.circular(2),
-                            boxShadow: [
-                              BoxShadow(
-                                color: kAccentViolet.withValues(alpha: 0.6),
-                                blurRadius: 8,
-                              ),
-                            ],
+                            gradient: kVioletBlueGradient,
+                            borderRadius: BorderRadius.circular(1),
                           ),
                         ),
                       ),
                     ),
                     const SizedBox(height: 14),
-                    child!,
+                    Text(
+                      'CONNECTING // WORKSPACE',
+                      style: GoogleFonts.jetBrainsMono(
+                        color: kDarkTextMuted,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 1.5,
+                      ),
+                    ),
                   ],
                 );
               },
@@ -242,59 +227,44 @@ class _IntroScreenState extends State<IntroScreen>
   }
 }
 
-/// Custom painter for the neon wavy ribbons shown in the reference splash screen.
-class _WaveRibbonPainter extends CustomPainter {
+/// Architectural minimal grid lines for the splash screen
+class _ArchitecturalGridPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
-    final paint1 = Paint()
-      ..shader = const LinearGradient(
+    final linePaint = Paint()
+      ..color = const Color(0xFF141722)
+      ..strokeWidth = 1.0;
+
+    final glowPaint = Paint()
+      ..shader = RadialGradient(
         colors: [
-          Color(0x337C3AED),
-          Color(0x1A3B82F6),
+          kAccentViolet.withValues(alpha: 0.08),
           Colors.transparent,
         ],
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height))
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.5;
+        radius: 0.8,
+      ).createShader(Rect.fromCircle(
+        center: Offset(size.width * 0.5, size.height * 0.45),
+        radius: size.width * 0.6,
+      ));
 
-    final path1 = Path();
-    path1.moveTo(0, size.height * 0.15);
-    path1.cubicTo(
-      size.width * 0.45,
-      size.height * 0.05,
-      size.width * 0.7,
-      size.height * 0.35,
-      size.width,
-      size.height * 0.28,
-    );
-    canvas.drawPath(path1, paint1);
-
-    final paint2 = Paint()
-      ..shader = const LinearGradient(
-        colors: [
-          Color(0x223B82F6),
-          Color(0x33A855F7),
-          Colors.transparent,
-        ],
-        begin: Alignment.bottomLeft,
-        end: Alignment.topRight,
-      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height))
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 3;
-
-    final path2 = Path();
-    path2.moveTo(0, size.height * 0.85);
-    path2.cubicTo(
-      size.width * 0.35,
-      size.height * 0.72,
+    // Ambient radial glow
+    canvas.drawCircle(
+      Offset(size.width * 0.5, size.height * 0.45),
       size.width * 0.6,
-      size.height * 0.95,
-      size.width,
-      size.height * 0.78,
+      glowPaint,
     );
-    canvas.drawPath(path2, paint2);
+
+    // Subtle crosslines
+    canvas.drawLine(
+      Offset(0, size.height * 0.5),
+      Offset(size.width, size.height * 0.5),
+      linePaint,
+    );
+    canvas.drawLine(
+      Offset(size.width * 0.5, 0),
+      Offset(size.width * 0.5, size.height),
+      linePaint,
+    );
   }
 
   @override

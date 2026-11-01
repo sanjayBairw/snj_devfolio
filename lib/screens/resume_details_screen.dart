@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../constants.dart';
 import '../models/resume_data.dart';
 import '../services/resume_download_service.dart';
 import '../utils/url_utils.dart';
+import '../widgets/app_ui.dart';
 
 /// Represents an interactive clickable hotspot within the resume document.
 class _ResumeLinkSpot {
@@ -190,12 +192,12 @@ class _ResumeDetailsScreenState extends State<ResumeDetailsScreen> {
                 'Opening ${link.title} • ${link.subtitle}',
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
+                style: GoogleFonts.inter(fontSize: 13),
               ),
             ),
           ],
         ),
         duration: const Duration(seconds: 2),
-        behavior: SnackBarBehavior.floating,
       ),
     );
   }
@@ -207,36 +209,37 @@ class _ResumeDetailsScreenState extends State<ResumeDetailsScreen> {
       isScrollControlled: true,
       backgroundColor: isDark ? kDarkSurface : Colors.white,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (ctx) {
         return SafeArea(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
+            padding: const EdgeInsets.fromLTRB(20, 14, 20, 24),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Center(
                   child: Container(
-                    width: 36,
+                    width: 38,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: Colors.grey.withValues(alpha: 0.4),
+                      color: appTextMuted(isDark).withValues(alpha: 0.4),
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
                 ),
-                const SizedBox(height: 14),
+                const SizedBox(height: 18),
                 Row(
                   children: [
-                    const Icon(Icons.link_rounded, color: kAccentViolet),
-                    const SizedBox(width: 8),
-                    const Text(
-                      'Resume Links & Verification',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
+                    const Icon(Icons.link_rounded, color: kAccentViolet, size: 20),
+                    const SizedBox(width: 10),
+                    Text(
+                      'Verified Credentials & Links',
+                      style: GoogleFonts.spaceGrotesk(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w700,
+                        color: appTextPrimary(isDark),
                       ),
                     ),
                     const Spacer(),
@@ -246,67 +249,65 @@ class _ResumeDetailsScreenState extends State<ResumeDetailsScreen> {
                         vertical: 3,
                       ),
                       decoration: BoxDecoration(
-                        color: kPrimaryPurple.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(12),
+                        color: kAccentViolet.withValues(alpha: isDark ? 0.2 : 0.12),
+                        borderRadius: BorderRadius.circular(kRadiusXs),
                       ),
                       child: Text(
-                        '${_resumeLinks.length} Active',
-                        style: const TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
+                        '${_resumeLinks.length} ACTIVE',
+                        style: GoogleFonts.jetBrainsMono(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
                           color: kAccentViolet,
                         ),
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 16),
                 Flexible(
                   child: ListView.separated(
                     shrinkWrap: true,
                     itemCount: _resumeLinks.length,
                     separatorBuilder: (_, __) => Divider(
                       height: 1,
-                      color: Colors.grey.withValues(alpha: 0.15),
+                      color: appBorderColor(isDark),
                     ),
                     itemBuilder: (ctx, index) {
                       final item = _resumeLinks[index];
                       return ListTile(
                         contentPadding: const EdgeInsets.symmetric(
                           horizontal: 4,
-                          vertical: 2,
+                          vertical: 4,
                         ),
                         leading: Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color: kPrimaryPurple.withValues(alpha: 0.12),
+                            color: kAccentViolet.withValues(alpha: isDark ? 0.16 : 0.1),
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          child:
-                              Icon(item.icon, size: 20, color: kAccentViolet),
+                          child: Icon(item.icon, size: 18, color: kAccentViolet),
                         ),
                         title: Text(
                           item.title,
-                          style: const TextStyle(
+                          style: GoogleFonts.spaceGrotesk(
                             fontSize: 14,
-                            fontWeight: FontWeight.w600,
+                            fontWeight: FontWeight.w700,
+                            color: appTextPrimary(isDark),
                           ),
                         ),
                         subtitle: Text(
                           item.subtitle,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: isDark
-                                ? kDarkTextSecondary
-                                : kLightTextSecondary,
+                          style: GoogleFonts.jetBrainsMono(
+                            fontSize: 11,
+                            color: appTextSecondary(isDark),
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        trailing: const Icon(
+                        trailing: Icon(
                           Icons.open_in_new_rounded,
                           size: 16,
-                          color: Colors.grey,
+                          color: appTextMuted(isDark),
                         ),
                         onTap: () {
                           Navigator.pop(ctx);
@@ -329,31 +330,34 @@ class _ResumeDetailsScreenState extends State<ResumeDetailsScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor:
-          isDark ? const Color(0xFF070B16) : const Color(0xFFE2E8F0),
+      backgroundColor: isDark ? kDarkBackground : const Color(0xFFE5E7EB),
       appBar: AppBar(
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text(
+            Text(
               kResumeFileName,
-              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+              style: GoogleFonts.spaceGrotesk(
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+              ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
             Text(
-              'Official Document • 1 Page • Clickable Links',
-              style: TextStyle(
-                fontSize: 11,
-                color: isDark ? kDarkTextSecondary : kLightTextSecondary,
+              'Official Document • 1 Page • Interactive Hotspots',
+              style: GoogleFonts.jetBrainsMono(
+                fontSize: 10,
+                color: kAccentViolet,
+                fontWeight: FontWeight.w600,
               ),
             ),
           ],
         ),
         actions: [
           IconButton(
-            tooltip: _showLinkHighlights ? 'Hide Highlights' : 'Highlight Links',
+            tooltip: _showLinkHighlights ? 'Hide Hotspot Borders' : 'Show Hotspot Borders',
             icon: Icon(
               _showLinkHighlights
                   ? Icons.highlight_rounded
@@ -370,16 +374,16 @@ class _ResumeDetailsScreenState extends State<ResumeDetailsScreen> {
             onPressed: () => _showQuickLinksModal(context),
           ),
           IconButton(
-            tooltip: 'Download PDF',
+            tooltip: 'Download PDF File',
             icon: const Icon(Icons.download_rounded, color: kAccentViolet),
             onPressed: () => ResumeDownloadService.downloadResume(context),
           ),
           IconButton(
-            tooltip: 'Reset Zoom',
+            tooltip: 'Reset Zoom Scale',
             icon: const Icon(Icons.refresh_rounded),
             onPressed: _resetZoom,
           ),
-          const SizedBox(width: 4),
+          const SizedBox(width: 6),
         ],
       ),
       body: SafeArea(
@@ -396,18 +400,18 @@ class _ResumeDetailsScreenState extends State<ResumeDetailsScreen> {
                   boundaryMargin: const EdgeInsets.all(40),
                   child: Center(
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
+                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 88),
                       child: Container(
                         constraints: const BoxConstraints(maxWidth: 820),
                         decoration: BoxDecoration(
                           color: Colors.white,
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(kRadiusSm),
                           boxShadow: [
                             BoxShadow(
                               color: Colors.black.withValues(
-                                alpha: isDark ? 0.6 : 0.25,
+                                alpha: isDark ? 0.6 : 0.22,
                               ),
-                              blurRadius: 20,
+                              blurRadius: 24,
                               spreadRadius: 2,
                               offset: const Offset(0, 8),
                             ),
@@ -445,9 +449,9 @@ class _ResumeDetailsScreenState extends State<ResumeDetailsScreen> {
                                         child: InkWell(
                                           borderRadius:
                                               BorderRadius.circular(3),
-                                          splashColor: kPrimaryPurple
+                                          splashColor: kAccentViolet
                                               .withValues(alpha: 0.3),
-                                          highlightColor: kAccentViolet
+                                          highlightColor: kAccentBlue
                                               .withValues(alpha: 0.15),
                                           onTap: () => _openResumeLink(link),
                                           child: Container(
@@ -455,14 +459,13 @@ class _ResumeDetailsScreenState extends State<ResumeDetailsScreen> {
                                               borderRadius:
                                                   BorderRadius.circular(3),
                                               color: _showLinkHighlights
-                                                  ? Colors.blue
+                                                  ? kAccentViolet
                                                       .withValues(alpha: 0.16)
                                                   : Colors.transparent,
                                               border: _showLinkHighlights
                                                   ? Border.all(
-                                                      color: Colors.blue
-                                                          .withValues(
-                                                              alpha: 0.45),
+                                                      color: kAccentViolet
+                                                          .withValues(alpha: 0.5),
                                                       width: 1.0,
                                                     )
                                                   : null,
@@ -483,7 +486,7 @@ class _ResumeDetailsScreenState extends State<ResumeDetailsScreen> {
               ),
             ),
 
-            // Top Tip Banner (Dismissible)
+            // Dismissible tip banner
             if (_showHintBanner && _showLinkHighlights)
               Positioned(
                 top: 8,
@@ -492,22 +495,18 @@ class _ResumeDetailsScreenState extends State<ResumeDetailsScreen> {
                 child: Center(
                   child: Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
+                      horizontal: 16,
                       vertical: 8,
                     ),
                     decoration: BoxDecoration(
                       color: (isDark ? kDarkSurface : Colors.white)
                           .withValues(alpha: 0.96),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: isDark
-                            ? Colors.white.withValues(alpha: 0.12)
-                            : kLightBorder,
-                      ),
+                      borderRadius: BorderRadius.circular(30),
+                      border: Border.all(color: appBorderColor(isDark)),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.18),
-                          blurRadius: 10,
+                          color: Colors.black.withValues(alpha: 0.15),
+                          blurRadius: 12,
                           offset: const Offset(0, 3),
                         ),
                       ],
@@ -521,20 +520,25 @@ class _ResumeDetailsScreenState extends State<ResumeDetailsScreen> {
                           color: kAccentViolet,
                         ),
                         const SizedBox(width: 8),
-                        const Text(
-                          'Links highlighted in blue are tap-friendly!',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
+                        Flexible(
+                          child: Text(
+                            'Interactive Hotspots: Tap any highlighted link to navigate',
+                            style: GoogleFonts.inter(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: appTextPrimary(isDark),
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: 10),
                         GestureDetector(
                           onTap: () => setState(() => _showHintBanner = false),
-                          child: const Icon(
+                          child: Icon(
                             Icons.close_rounded,
                             size: 16,
-                            color: Colors.grey,
+                            color: appTextMuted(isDark),
                           ),
                         ),
                       ],
@@ -551,20 +555,16 @@ class _ResumeDetailsScreenState extends State<ResumeDetailsScreen> {
               child: Center(
                 child: Container(
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   decoration: BoxDecoration(
                     color: (isDark ? kDarkSurface : Colors.white)
                         .withValues(alpha: 0.95),
                     borderRadius: BorderRadius.circular(30),
-                    border: Border.all(
-                      color: isDark
-                          ? Colors.white.withValues(alpha: 0.12)
-                          : kLightBorder,
-                    ),
+                    border: Border.all(color: appBorderColor(isDark)),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.25),
-                        blurRadius: 16,
+                        color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.1),
+                        blurRadius: 20,
                         offset: const Offset(0, 4),
                       ),
                     ],
@@ -580,13 +580,13 @@ class _ResumeDetailsScreenState extends State<ResumeDetailsScreen> {
                           onPressed: _zoomOut,
                         ),
                         Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 4),
+                          padding: const EdgeInsets.symmetric(horizontal: 6),
                           child: Text(
                             '${(_currentScale * 100).toInt()}%',
-                            style: TextStyle(
+                            style: GoogleFonts.jetBrainsMono(
                               fontSize: 12,
                               fontWeight: FontWeight.w700,
-                              color: isDark ? Colors.white : kLightTextPrimary,
+                              color: appTextPrimary(isDark),
                             ),
                           ),
                         ),
@@ -598,17 +598,17 @@ class _ResumeDetailsScreenState extends State<ResumeDetailsScreen> {
                         Container(
                           height: 20,
                           width: 1,
-                          color: Colors.grey.withValues(alpha: 0.3),
-                          margin: const EdgeInsets.symmetric(horizontal: 4),
+                          color: appBorderColor(isDark),
+                          margin: const EdgeInsets.symmetric(horizontal: 6),
                         ),
                         OutlinedButton.icon(
                           onPressed: () => _showQuickLinksModal(context),
                           icon: const Icon(Icons.link_rounded, size: 16),
                           label: Text(
                             'Links (${_resumeLinks.length})',
-                            style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
+                            style: GoogleFonts.jetBrainsMono(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
                             ),
                           ),
                           style: OutlinedButton.styleFrom(
@@ -617,7 +617,7 @@ class _ResumeDetailsScreenState extends State<ResumeDetailsScreen> {
                               color: kAccentViolet.withValues(alpha: 0.4),
                             ),
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
+                              horizontal: 12,
                               vertical: 8,
                             ),
                             minimumSize: Size.zero,
@@ -629,17 +629,17 @@ class _ResumeDetailsScreenState extends State<ResumeDetailsScreen> {
                           onPressed: () =>
                               ResumeDownloadService.downloadResume(context),
                           icon: const Icon(Icons.download_rounded, size: 16),
-                          label: const Text(
+                          label: Text(
                             'Download PDF',
-                            style: TextStyle(
+                            style: GoogleFonts.inter(
                               fontSize: 12,
                               fontWeight: FontWeight.w700,
                             ),
                           ),
                           style: FilledButton.styleFrom(
-                            backgroundColor: kPrimaryPurple,
+                            backgroundColor: kAccentViolet,
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 14,
+                              horizontal: 16,
                               vertical: 10,
                             ),
                             minimumSize: Size.zero,
@@ -660,25 +660,25 @@ class _ResumeDetailsScreenState extends State<ResumeDetailsScreen> {
 
   Widget _buildFallbackDocument(bool isDark) {
     return Container(
-      padding: const EdgeInsets.all(28),
+      padding: const EdgeInsets.all(32),
       color: Colors.white,
-      child: const Column(
+      child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.picture_as_pdf_rounded, size: 64, color: Colors.redAccent),
-          SizedBox(height: 12),
+          const Icon(Icons.picture_as_pdf_rounded, size: 64, color: Colors.redAccent),
+          const SizedBox(height: 16),
           Text(
-            'Sanjay Bairwa — Resume',
-            style: TextStyle(
-              fontSize: 18,
+            '$kDevName — Resume',
+            style: GoogleFonts.spaceGrotesk(
+              fontSize: 20,
               fontWeight: FontWeight.bold,
               color: Colors.black87,
             ),
           ),
-          SizedBox(height: 6),
+          const SizedBox(height: 6),
           Text(
-            'Flutter Developer • Full Stack Developer',
-            style: TextStyle(fontSize: 14, color: Colors.black54),
+            kDevRole,
+            style: GoogleFonts.inter(fontSize: 14, color: Colors.black54),
           ),
         ],
       ),
